@@ -429,11 +429,11 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .rectify-lane:nth-child(4) { background: linear-gradient(180deg, rgba(239,247,248,.58), rgba(248,250,251,.54)); }
 
 /* Lower visual weight pass */
-.topbar h2 { font-size: 28px; font-weight: 560; }
-.brand-block h1 { font-weight: 570; }
+.topbar h2 { font-size: 28px; font-weight: 500; }
+.brand-block h1 { font-weight: 500; }
 .nav-item span { font-weight: 540; }
-.section-heading h3 { font-weight: 560; }
-.metric-card strong, .summary-stat strong, .analytics-cards strong { font-weight: 560; }
+.section-heading h3 { font-weight: 500; }
+.metric-card strong, .summary-stat strong, .analytics-cards strong { font-weight: 520; }
 .compact-case-table td strong,
 .quality-table td strong,
 .task-item strong,
@@ -485,7 +485,7 @@ mark.evidence { color: #9d3a30; background: #fff1ed; border-radius: 6px; padding
   --radius-md: 16px;
   --radius-sm: 12px;
   --font: "Instrument Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  --font-display: "Manrope", "Instrument Sans", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  --font-display: "Instrument Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 
 body {
@@ -536,21 +536,21 @@ select:focus-visible {
 
 .brand-block h1 {
   font-size: 15px;
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: -.008em;
 }
 
 .topbar h2 {
   font-size: 27px;
   line-height: 1.08;
-  font-weight: 540;
+  font-weight: 500;
   letter-spacing: -.014em;
 }
 
 .section-heading h3 {
   font-size: 18px;
   line-height: 1.22;
-  font-weight: 535;
+  font-weight: 500;
   letter-spacing: -.008em;
 }
 
@@ -744,7 +744,7 @@ select:focus-visible {
 .score-badge,
 .report-paper dd {
   font-family: var(--font-display);
-  font-weight: 535;
+  font-weight: 520;
   letter-spacing: -.01em;
 }
 
@@ -848,7 +848,7 @@ select:focus-visible {
 }
 
 .report-paper h4 {
-  font-weight: 545;
+  font-weight: 500;
 }
 
 .compact-case-table th,
