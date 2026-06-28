@@ -641,7 +641,7 @@ function renderReport() {
   const defects = caseItem.defects;
   const passText = isPassed(caseItem) ? '通过' : '未通过';
   element('#reportPaper').innerHTML = `
-    <h4>${caseItem.patient} 本次住院终末质控报告</h4>
+    <h4>${caseItem.patient}</h4>
     <p>${caseItem.department}｜${caseItem.visitNo}｜${caseItem.genderAge}｜主治：${caseItem.doctor}｜${caseItem.diagnosis}</p>
     <dl>
       <div><dt>病例总分</dt><dd>${caseItem.score} 分</dd></div>
