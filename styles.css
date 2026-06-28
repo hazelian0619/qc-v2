@@ -303,27 +303,70 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 }
 
 .case-detail-layout {
+  --detail-nav-width: 276px;
+  --detail-defect-width: 376px;
+  --detail-content-height: calc(100vh - 286px);
   display: grid;
-  grid-template-columns: 230px minmax(430px, 1fr) 330px;
+  grid-template-columns: var(--detail-nav-width) 10px minmax(520px, 1fr) 10px var(--detail-defect-width);
   grid-template-areas:
-    "summary summary summary"
-    "docs record defects";
+    "summary summary summary summary summary"
+    "docs resizeLeft record resizeRight defects";
   gap: 14px;
+  align-items: stretch;
 }
 .case-summary { grid-area: summary; }
-.document-nav { grid-area: docs; align-self: start; }
-.record-panel { grid-area: record; min-height: 600px; }
-.defect-panel { grid-area: defects; align-self: start; }
+.document-nav,
+.record-panel,
+.defect-panel {
+  height: var(--detail-content-height);
+  min-height: 520px;
+  overflow: hidden;
+}
+.document-nav { grid-area: docs; align-self: stretch; display: flex; flex-direction: column; }
+.record-panel { grid-area: record; display: flex; flex-direction: column; }
+.defect-panel { grid-area: defects; align-self: stretch; display: flex; flex-direction: column; }
+.detail-resizer {
+  position: relative;
+  align-self: stretch;
+  width: 10px;
+  cursor: col-resize;
+}
+.detail-resizer::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 18px;
+  bottom: 18px;
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(77, 111, 153, .12);
+  transition: background .16s ease;
+}
+.detail-resizer:hover::before,
+.detail-resizer.is-dragging::before {
+  background: rgba(77, 111, 153, .38);
+}
+.detail-resizer-left { grid-area: resizeLeft; }
+.detail-resizer-right { grid-area: resizeRight; }
 .score-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 72px; height: 42px; color: var(--primary-2); background: var(--primary-soft); border-radius: 999px; font-size: 20px; font-weight: 600; }
 .summary-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
 .summary-stat { padding: 12px; background: rgba(248,251,252,.82); border: 1px solid var(--line-soft); border-radius: 13px; }
 .summary-stat span { color: var(--muted); font-size: 12px; }
 .summary-stat strong { display: block; margin-top: 5px; font-size: 19px; font-weight: 600; }
+.document-nav #documentList,
+.medical-record,
+.defect-panel #defectCards {
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.defect-panel #defectCards {
+  flex: 1;
+}
 .doc-item { width: 100%; margin-bottom: 8px; text-align: left; color: var(--text-soft); }
 .doc-item.is-active { color: var(--primary-2); background: var(--primary-soft); border-color: #cfe4ed; }
 .doc-item strong { display: block; margin-bottom: 4px; font-weight: 590; }
 .doc-item span { color: var(--muted); font-size: 12px; }
-.medical-record { display: grid; gap: 10px; color: #243546; line-height: 1.75; }
+.medical-record { display: grid; gap: 10px; color: #243546; line-height: 1.75; flex: 1; }
 .medical-record p { margin: 0; padding: 11px 12px; background: rgba(249,252,253,.72); border: 1px solid var(--line-soft); border-radius: 12px; }
 .evidence { color: #9d3a30; background: #fff1ed; border-radius: 6px; padding: 1px 4px; }
 .defect-card { margin-bottom: 10px; }
@@ -381,7 +424,14 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .dashboard-grid, .split-layout, .report-layout { grid-template-columns: 1fr; }
   .metric-grid, .task-list, .rule-board, .rectify-board, .analytics-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rules-dashboard-grid .rule-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .case-detail-layout { grid-template-columns: 1fr; grid-template-areas: "summary" "docs" "record" "defects"; }
+  .case-detail-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: "summary" "docs" "record" "defects";
+  }
+  .detail-resizer { display: none; }
+  .document-nav,
+  .record-panel,
+  .defect-panel { height: auto; min-height: 0; }
   .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

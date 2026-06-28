@@ -24,6 +24,10 @@ const state = {
     admitStartDate: '2026-05-25',
     admitEndDate: '2026-06-27',
   },
+  detailLayout: {
+    navWidth: 276,
+    defectWidth: 376,
+  },
 };
 
 const metrics = [
@@ -393,6 +397,13 @@ function syncBatchDateInputs() {
   });
 }
 
+function applyDetailLayout() {
+  const detailLayout = element('.case-detail-layout');
+  if (!detailLayout) return;
+  detailLayout.style.setProperty('--detail-nav-width', `${state.detailLayout.navWidth}px`);
+  detailLayout.style.setProperty('--detail-defect-width', `${state.detailLayout.defectWidth}px`);
+}
+
 function showToast(message) {
   const toast = element('#toast');
   toast.textContent = message;
@@ -566,6 +577,7 @@ function renderResults() {
 }
 
 function renderDetail() {
+  applyDetailLayout();
   const caseItem = selectedCase();
   const documents = caseItem.documents;
   const activeDocument = documents.find((documentItem) => documentItem.id === state.selectedDocumentId) || documents[0];
@@ -633,6 +645,51 @@ function renderDetail() {
       </div>
     </article>
   `).join('');
+}
+
+function initDetailResizers() {
+  const detailLayout = element('.case-detail-layout');
+  const leftResizer = element('#detailResizerLeft');
+  const rightResizer = element('#detailResizerRight');
+  if (!detailLayout || !leftResizer || !rightResizer) return;
+
+  const startDrag = (side, resizer, startEvent) => {
+    if (window.innerWidth <= 1180) return;
+    startEvent.preventDefault();
+    const startX = startEvent.clientX;
+    const startNavWidth = state.detailLayout.navWidth;
+    const startDefectWidth = state.detailLayout.defectWidth;
+    resizer.classList.add('is-dragging');
+
+    const onMove = (moveEvent) => {
+      const delta = moveEvent.clientX - startX;
+      if (side === 'left') {
+        state.detailLayout.navWidth = Math.min(340, Math.max(220, startNavWidth + delta));
+      } else {
+        state.detailLayout.defectWidth = Math.min(520, Math.max(320, startDefectWidth - delta));
+      }
+      applyDetailLayout();
+    };
+
+    const onUp = () => {
+      resizer.classList.remove('is-dragging');
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
+  leftResizer.addEventListener('pointerdown', (event) => startDrag('left', leftResizer, event));
+  rightResizer.addEventListener('pointerdown', (event) => startDrag('right', rightResizer, event));
+  const resetLayout = () => {
+    state.detailLayout.navWidth = 276;
+    state.detailLayout.defectWidth = 376;
+    applyDetailLayout();
+  };
+  leftResizer.addEventListener('dblclick', resetLayout);
+  rightResizer.addEventListener('dblclick', resetLayout);
 }
 
 function renderReport() {
@@ -988,6 +1045,7 @@ function init() {
   renderRules();
   renderDashboard();
   bindEvents();
+  initDetailResizers();
 }
 
 init();
