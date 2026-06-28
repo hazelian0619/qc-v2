@@ -364,13 +364,13 @@ const cases = [
 const statusTabs = ['全部', '待质检', '质检中', 'AI 已完成', '待人工复核', '待整改', '已通过', '未通过'];
 
 const viewMeta = {
-  overview: ['终末质控', '质控工作台'],
-  batch: ['终末质控', '质检任务'],
-  results: ['终末质控', '质检结果'],
-  detail: ['终末质控', '单病例质控'],
-  report: ['终末质控', '质控报告'],
-  rectify: ['终末质控', '整改复核'],
-  rules: ['终末质控', '规则与看板'],
+  overview: '质控工作台',
+  batch: '质检任务',
+  results: '质检结果',
+  detail: '单病例质控',
+  report: '质控报告',
+  rectify: '整改复核',
+  rules: '规则与看板',
 };
 
 const element = (selector) => document.querySelector(selector);
@@ -410,8 +410,7 @@ function navigate(viewName) {
   elements('.view').forEach((viewElement) => viewElement.classList.remove('is-visible'));
   element(`#${viewName}View`).classList.add('is-visible');
   elements('.nav-item').forEach((button) => button.classList.toggle('is-active', button.dataset.view === viewName));
-  element('#viewEyebrow').textContent = viewMeta[viewName][0];
-  element('#viewTitle').textContent = viewMeta[viewName][1];
+  element('#viewTitle').textContent = viewMeta[viewName];
   if (viewName === 'detail') renderDetail();
   if (viewName === 'report') renderReport();
   if (viewName === 'rectify') renderRectify();
