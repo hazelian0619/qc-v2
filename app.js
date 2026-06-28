@@ -24,10 +24,6 @@ const state = {
     admitStartDate: '2026-05-25',
     admitEndDate: '2026-06-27',
   },
-  batchLayout: {
-    columns: 3,
-    gap: 12,
-  },
 };
 
 const metrics = [
@@ -384,25 +380,6 @@ function formatDateRange(start, end) {
   return `${start} 至 ${end}`;
 }
 
-function applyBatchLayout() {
-  const batchForm = element('#batchForm');
-  if (!batchForm) return;
-  batchForm.style.setProperty('--filter-columns', state.batchLayout.columns);
-  batchForm.style.setProperty('--filter-gap', `${state.batchLayout.gap}px`);
-
-  const columnsValue = element('#filterColumnsValue');
-  const gapValue = element('#filterGapValue');
-  const summary = element('#filterLayoutSummary');
-  const columnsRange = element('#filterColumnsRange');
-  const gapRange = element('#filterGapRange');
-
-  if (columnsValue) columnsValue.textContent = `${state.batchLayout.columns} 栏`;
-  if (gapValue) gapValue.textContent = `${state.batchLayout.gap} px`;
-  if (summary) summary.textContent = `${state.batchLayout.columns} 栏 · ${state.batchLayout.gap} px`;
-  if (columnsRange) columnsRange.value = String(state.batchLayout.columns);
-  if (gapRange) gapRange.value = String(state.batchLayout.gap);
-}
-
 function syncBatchDateInputs() {
   const mapping = {
     '#batchDischargeStart': state.batchFilters.dischargeStartDate,
@@ -507,7 +484,6 @@ function renderOverview() {
 
 function renderBatch() {
   syncBatchDateInputs();
-  applyBatchLayout();
   element('#ruleOptions').innerHTML = rules.map((rule) => `
     <button class="rule-option ${rule.id === state.selectedRuleId ? 'is-selected' : ''}" data-rule-id="${rule.id}" type="button">
       <strong>${rule.name}</strong>
@@ -1002,22 +978,6 @@ function bindEvents() {
     });
   });
 
-  element('#filterColumnsRange')?.addEventListener('input', (event) => {
-    state.batchLayout.columns = Number(event.target.value);
-    applyBatchLayout();
-  });
-
-  element('#filterGapRange')?.addEventListener('input', (event) => {
-    state.batchLayout.gap = Number(event.target.value);
-    applyBatchLayout();
-  });
-
-  element('#fitOnePageButton')?.addEventListener('click', () => {
-    state.batchLayout.columns = 4;
-    state.batchLayout.gap = 8;
-    applyBatchLayout();
-    showToast('已切换为一页模式：4 栏，8 px 间距');
-  });
 }
 
 function init() {
