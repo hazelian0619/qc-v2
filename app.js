@@ -18,6 +18,16 @@ const state = {
   selectedCandidateIds: ['case-001', 'case-003', 'case-005'],
   selectedResultIds: [],
   importMode: 'HIS/EMR',
+  batchFilters: {
+    dischargeStartDate: '2026-06-01',
+    dischargeEndDate: '2026-06-27',
+    admitStartDate: '2026-05-25',
+    admitEndDate: '2026-06-27',
+  },
+  batchLayout: {
+    columns: 3,
+    gap: 12,
+  },
 };
 
 const metrics = [
@@ -370,6 +380,42 @@ const viewMeta = {
 const element = (selector) => document.querySelector(selector);
 const elements = (selector) => Array.from(document.querySelectorAll(selector));
 
+function formatDateRange(start, end) {
+  return `${start} 至 ${end}`;
+}
+
+function applyBatchLayout() {
+  const batchForm = element('#batchForm');
+  if (!batchForm) return;
+  batchForm.style.setProperty('--filter-columns', state.batchLayout.columns);
+  batchForm.style.setProperty('--filter-gap', `${state.batchLayout.gap}px`);
+
+  const columnsValue = element('#filterColumnsValue');
+  const gapValue = element('#filterGapValue');
+  const summary = element('#filterLayoutSummary');
+  const columnsRange = element('#filterColumnsRange');
+  const gapRange = element('#filterGapRange');
+
+  if (columnsValue) columnsValue.textContent = `${state.batchLayout.columns} 栏`;
+  if (gapValue) gapValue.textContent = `${state.batchLayout.gap} px`;
+  if (summary) summary.textContent = `${state.batchLayout.columns} 栏 · ${state.batchLayout.gap} px`;
+  if (columnsRange) columnsRange.value = String(state.batchLayout.columns);
+  if (gapRange) gapRange.value = String(state.batchLayout.gap);
+}
+
+function syncBatchDateInputs() {
+  const mapping = {
+    '#batchDischargeStart': state.batchFilters.dischargeStartDate,
+    '#batchDischargeEnd': state.batchFilters.dischargeEndDate,
+    '#batchAdmitStart': state.batchFilters.admitStartDate,
+    '#batchAdmitEnd': state.batchFilters.admitEndDate,
+  };
+  Object.entries(mapping).forEach(([selector, value]) => {
+    const input = element(selector);
+    if (input) input.value = value;
+  });
+}
+
 function showToast(message) {
   const toast = element('#toast');
   toast.textContent = message;
@@ -460,6 +506,8 @@ function renderOverview() {
 }
 
 function renderBatch() {
+  syncBatchDateInputs();
+  applyBatchLayout();
   element('#ruleOptions').innerHTML = rules.map((rule) => `
     <button class="rule-option ${rule.id === state.selectedRuleId ? 'is-selected' : ''}" data-rule-id="${rule.id}" type="button">
       <strong>${rule.name}</strong>
@@ -908,12 +956,14 @@ function bindEvents() {
   });
 
   element('#syncHisButton').addEventListener('click', () => showToast('已模拟同步 HIS/EMR：新增 12 份出院病例'));
-  element('#previewCasesButton').addEventListener('click', () => showToast('已按当前条件预览匹配病例'));
+  element('#previewCasesButton').addEventListener('click', () => {
+    showToast(`已按当前条件预览病例：出院日期 ${formatDateRange(state.batchFilters.dischargeStartDate, state.batchFilters.dischargeEndDate)}`);
+  });
   element('#createTaskButton').addEventListener('click', () => {
     const targetIds = state.selectedCandidateIds.length ? state.selectedCandidateIds : cases.map((caseItem) => caseItem.id);
     tasks.unshift({
       name: '新建终末质控任务',
-      scope: `${state.importMode}｜${targetIds.length} 份病例｜${rules.find((rule) => rule.id === state.selectedRuleId)?.name || '基础规则'}`,
+      scope: `${state.importMode}｜${targetIds.length} 份病例｜${formatDateRange(state.batchFilters.dischargeStartDate, state.batchFilters.dischargeEndDate)}｜${rules.find((rule) => rule.id === state.selectedRuleId)?.name || '基础规则'}`,
       progress: 8,
       status: '质检中',
     });
@@ -932,6 +982,42 @@ function bindEvents() {
     renderCandidates();
   });
   element('#exportSelectedButton').addEventListener('click', () => showToast('已生成当前筛选结果的报告导出任务：PDF + Excel + 复核意见'));
+
+  const batchDateInputs = {
+    batchDischargeStart: 'dischargeStartDate',
+    batchDischargeEnd: 'dischargeEndDate',
+    batchAdmitStart: 'admitStartDate',
+    batchAdmitEnd: 'admitEndDate',
+  };
+
+  Object.entries(batchDateInputs).forEach(([id, key]) => {
+    const input = element(`#${id}`);
+    if (!input) return;
+    input.addEventListener('change', (event) => {
+      state.batchFilters[key] = event.target.value;
+      showToast(`已更新${id.includes('Discharge') ? '出院' : '入院'}日期：${formatDateRange(
+        id.includes('Discharge') ? state.batchFilters.dischargeStartDate : state.batchFilters.admitStartDate,
+        id.includes('Discharge') ? state.batchFilters.dischargeEndDate : state.batchFilters.admitEndDate,
+      )}`);
+    });
+  });
+
+  element('#filterColumnsRange')?.addEventListener('input', (event) => {
+    state.batchLayout.columns = Number(event.target.value);
+    applyBatchLayout();
+  });
+
+  element('#filterGapRange')?.addEventListener('input', (event) => {
+    state.batchLayout.gap = Number(event.target.value);
+    applyBatchLayout();
+  });
+
+  element('#fitOnePageButton')?.addEventListener('click', () => {
+    state.batchLayout.columns = 4;
+    state.batchLayout.gap = 8;
+    applyBatchLayout();
+    showToast('已切换为一页模式：4 栏，8 px 间距');
+  });
 }
 
 function init() {

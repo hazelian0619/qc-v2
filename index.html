@@ -130,12 +130,43 @@
                 <span class="status-pill calm">院内直连</span>
               </div>
 
+              <section class="layout-toolbar" aria-label="筛选布局控制">
+                <div class="layout-toolbar-copy">
+                  <p class="eyebrow">筛选布局</p>
+                  <div class="layout-summary">
+                    <strong id="filterLayoutSummary">3 栏 · 12 px</strong>
+                    <small>拖动栏数和间距，把筛选区控制在一页内</small>
+                  </div>
+                </div>
+                <div class="layout-controls">
+                  <label class="range-control">
+                    <span>栏数</span>
+                    <input id="filterColumnsRange" type="range" min="2" max="4" step="1" value="3" />
+                    <strong id="filterColumnsValue">3 栏</strong>
+                  </label>
+                  <label class="range-control">
+                    <span>间距</span>
+                    <input id="filterGapRange" type="range" min="8" max="18" step="1" value="12" />
+                    <strong id="filterGapValue">12 px</strong>
+                  </label>
+                  <button class="button button-ghost" id="fitOnePageButton" type="button">一页模式</button>
+                </div>
+              </section>
+
               <form class="filter-grid" id="batchForm">
-               <label>出院日期
-                 <input name="dateRange" type="text" value="2026-06-01 至 2026-06-27" />
+               <label class="span-2">出院日期
+                 <div class="date-range-field">
+                   <input id="batchDischargeStart" name="dischargeStartDate" type="date" value="2026-06-01" />
+                   <span>至</span>
+                   <input id="batchDischargeEnd" name="dischargeEndDate" type="date" value="2026-06-27" />
+                 </div>
                </label>
-                <label>入院日期
-                  <input name="admitDateRange" type="text" value="2026-05-25 至 2026-06-27" />
+                <label class="span-2">入院日期
+                  <div class="date-range-field">
+                    <input id="batchAdmitStart" name="admitStartDate" type="date" value="2026-05-25" />
+                    <span>至</span>
+                    <input id="batchAdmitEnd" name="admitEndDate" type="date" value="2026-06-27" />
+                  </div>
                 </label>
                 <label>入院科室
                   <select name="admitDepartment">

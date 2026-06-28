@@ -218,8 +218,48 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .task-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .task-item p { margin: 0 0 8px; color: var(--muted); }
 
-.filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.layout-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,.66);
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+}
+.layout-toolbar-copy { display: grid; gap: 4px; }
+.layout-summary { display: grid; gap: 3px; }
+.layout-summary strong { color: var(--text); font-size: 14px; font-weight: 560; }
+.layout-summary small { color: var(--muted); font-size: 12px; }
+.layout-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+}
+.range-control { min-width: 168px; display: grid; gap: 6px; }
+.range-control span { color: var(--muted); font-size: 12px; }
+.range-control strong { color: var(--primary-2); font-size: 12px; font-weight: 560; }
+.range-control input[type="range"] { width: 100%; accent-color: var(--primary); }
+.filter-grid {
+  --filter-columns: 3;
+  --filter-gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(var(--filter-columns), minmax(0, 1fr));
+  gap: var(--filter-gap);
+}
 .filter-grid label, .table-toolbar label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 560; }
+.filter-grid label.span-2 { grid-column: span 2; }
+.date-range-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.date-range-field span { color: var(--muted); font-size: 12px; text-align: center; }
 .batch-import-panel {
   margin-bottom: 18px;
   padding: 14px;
@@ -371,13 +411,20 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   .rules-dashboard-grid .rule-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .case-detail-layout { grid-template-columns: 1fr; grid-template-areas: "summary" "docs" "record" "defects"; }
   .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .filter-grid { --filter-columns: 2; }
 }
 @media (max-width: 720px) {
   .workspace { padding: 16px; }
   .topbar, .section-heading, .table-toolbar, .control-strip { align-items: stretch; flex-direction: column; }
   .topbar-actions, .action-row, .control-actions { align-items: stretch; flex-direction: column; }
   .search-box input { width: 100%; }
-  .nav-list, .metric-grid, .filter-grid, .rule-options, .summary-grid, .report-paper dl, .task-list, .rule-board, .rectify-board, .analytics-cards { grid-template-columns: 1fr; }
+  .layout-toolbar,
+  .layout-controls { align-items: stretch; }
+  .range-control { min-width: 100%; }
+  .nav-list, .metric-grid, .rule-options, .summary-grid, .report-paper dl, .task-list, .rule-board, .rectify-board, .analytics-cards { grid-template-columns: 1fr; }
+  .filter-grid { --filter-columns: 1; }
+  .filter-grid label.span-2 { grid-column: span 1; }
+  .date-range-field { grid-template-columns: 1fr; }
   .rules-dashboard-grid .rule-board { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -432,7 +479,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .defect-card.is-active { border-color: rgba(36,116,169,.42); box-shadow: 0 0 0 3px rgba(36,116,169,.06); }
 .doc-item .status-pill { margin-right: 4px; }
 mark.evidence { color: #9d3a30; background: #fff1ed; border-radius: 6px; padding: 1px 4px; scroll-margin-top: 80px; }
-.filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .quality-table .button { margin-right: 4px; }
 
 /* 2026 refresh: cold minimal blue system */
@@ -602,6 +648,10 @@ select:focus-visible {
 .search-box input::placeholder,
 .filter-grid input::placeholder {
   color: #91a2b6;
+}
+
+.date-range-field input[type="date"] {
+  min-width: 0;
 }
 
 .button {
