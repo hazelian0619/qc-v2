@@ -853,26 +853,103 @@ function renderRules() {
 
 function renderDashboard() {
   const departments = [
-    { name: '普外科', pass: 68, avg: 82.4, defects: 29, rectify: 61 },
-    { name: '心内科', pass: 82, avg: 88.1, defects: 14, rectify: 74 },
-    { name: '骨科', pass: 64, avg: 79.6, defects: 31, rectify: 58 },
-    { name: '神经内科', pass: 91, avg: 93.2, defects: 8, rectify: 86 },
+    { name: '普外科', pass: 68, avg: 82.4, defects: 29, rectify: 61, delta: -3.1, risk: '高', focus: '首页缺项' },
+    { name: '心内科', pass: 82, avg: 88.1, defects: 14, rectify: 74, delta: 1.8, risk: '中', focus: '病程闭环' },
+    { name: '骨科', pass: 64, avg: 79.6, defects: 31, rectify: 58, delta: -4.6, risk: '高', focus: '手术材料' },
+    { name: '神经内科', pass: 91, avg: 93.2, defects: 8, rectify: 86, delta: 2.5, risk: '低', focus: '签名一致性' },
   ];
+  const trendSeries = [
+    { day: '06/21', total: 42, closed: 24 },
+    { day: '06/22', total: 55, closed: 31 },
+    { day: '06/23', total: 37, closed: 22 },
+    { day: '06/24', total: 68, closed: 39 },
+    { day: '06/25', total: 51, closed: 34 },
+    { day: '06/26', total: 44, closed: 29 },
+    { day: '06/27', total: 32, closed: 21 },
+  ];
+  const maxTrendValue = Math.max(...trendSeries.map((item) => item.total));
   element('#analyticsGrid').innerHTML = `
-    <div class="analytics-cards">
+    <div class="analytics-cards analytics-cards-compact">
       <article><span>全院通过率</span><strong>74%</strong><small>较上月 +3.2%</small></article>
       <article><span>平均得分</span><strong>86.2</strong><small>目标 90 分</small></article>
       <article><span>高频缺陷</span><strong>48</strong><small>文书完整性最多</small></article>
       <article><span>整改及时率</span><strong>69%</strong><small>平均 2.8 天</small></article>
     </div>
-    <div class="department-table">
-      <table><thead><tr><th>科室</th><th>通过率</th><th>平均分</th><th>缺陷数</th><th>整改及时率</th></tr></thead><tbody>
-      ${departments.map((department) => `
-        <tr><td>${department.name}</td><td><div class="progress-track"><span style="width:${department.pass}%"></span></div>${department.pass}%</td><td>${department.avg}</td><td>${department.defects}</td><td>${department.rectify}%</td></tr>
-      `).join('')}
-      </tbody></table>
-    </div>
-    <div class="trend-panel"><h4>缺陷趋势</h4><div class="bars">${[42, 55, 37, 68, 51, 44, 32].map((value) => `<span style="height:${value + 40}px"></span>`).join('')}</div></div>
+
+    <section class="analytics-workbench">
+      <article class="department-compare">
+        <div class="section-heading compact">
+          <div>
+            <h4>科室对比</h4>
+            <p>通过率、均分与整改效率同屏比较</p>
+          </div>
+        </div>
+        <div class="department-rows">
+          ${departments.map((department) => `
+            <article class="department-row">
+              <div class="department-row-main">
+                <div class="department-name-block">
+                  <strong>${department.name}</strong>
+                  <span class="status-pill ${department.risk === '高' ? 'danger' : department.risk === '中' ? 'warning' : 'calm'}">${department.risk}风险</span>
+                </div>
+                <small>${department.focus}</small>
+              </div>
+              <div class="department-row-metric pass">
+                <span>通过率</span>
+                <strong>${department.pass}%</strong>
+                <div class="metric-track"><span style="width:${department.pass}%"></span></div>
+              </div>
+              <div class="department-row-metric avg">
+                <span>平均分</span>
+                <strong>${department.avg}</strong>
+                <small class="${department.delta >= 0 ? 'up' : 'down'}">${department.delta >= 0 ? '+' : ''}${department.delta}</small>
+              </div>
+              <div class="department-row-metric defects">
+                <span>缺陷数</span>
+                <strong>${department.defects}</strong>
+              </div>
+              <div class="department-row-metric rectify">
+                <span>整改及时率</span>
+                <strong>${department.rectify}%</strong>
+                <div class="metric-track subtle"><span style="width:${department.rectify}%"></span></div>
+              </div>
+            </article>
+          `).join('')}
+        </div>
+      </article>
+
+      <article class="trend-panel trend-panel-refined">
+        <div class="section-heading compact">
+          <div>
+            <h4>缺陷趋势</h4>
+            <p>近 7 日新增与已闭环走势</p>
+          </div>
+          <div class="trend-legend">
+            <span><i class="legend-dot total"></i>新增缺陷</span>
+            <span><i class="legend-dot closed"></i>已闭环</span>
+          </div>
+        </div>
+        <div class="trend-chart">
+          ${trendSeries.map((item) => `
+            <div class="trend-column">
+              <div class="trend-bars">
+                <span class="bar total" style="height:${Math.round((item.total / maxTrendValue) * 100)}%"></span>
+                <span class="bar closed" style="height:${Math.round((item.closed / maxTrendValue) * 100)}%"></span>
+              </div>
+              <div class="trend-meta">
+                <strong>${item.total}</strong>
+                <small>${item.day}</small>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="trend-summary">
+          <div><span>峰值</span><strong>06/24</strong><small>68 条</small></div>
+          <div><span>闭环率</span><strong>61%</strong><small>较上周 +4%</small></div>
+          <div><span>主要来源</span><strong>文书完整性</strong><small>占比 38%</small></div>
+        </div>
+      </article>
+    </section>
   `;
 }
 
