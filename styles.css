@@ -63,7 +63,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   backdrop-filter: blur(20px);
   overflow-y: auto;
 }
-.brand-block { display: flex; align-items: center; gap: 10px; padding: 4px 10px 26px; }
+.brand-block { display: flex; align-items: center; gap: 10px; padding: 4px 10px 22px; }
 .brand-mark {
   display: grid;
   place-items: center;
@@ -76,8 +76,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   font-weight: 620;
   box-shadow: 0 8px 18px rgba(23,102,155,.12);
 }
-.eyebrow { margin: 0 0 5px; color: var(--muted); font-size: 11px; font-weight: 560; letter-spacing: .045em; }
-.brand-block h1 { margin: 0; font-size: 16px; font-weight: 620; letter-spacing: -.025em; }
+.eyebrow { margin: 0 0 4px; color: var(--muted); font-size: 11px; font-weight: 520; letter-spacing: .04em; }
+.brand-block h1 { margin: 0; font-size: 15px; font-weight: 580; letter-spacing: -.018em; }
 .nav-list { display: grid; gap: 3px; }
 .nav-item {
   position: relative;
@@ -566,8 +566,8 @@ select:focus-visible {
 }
 
 .brand-block h1 {
-  font-size: 16px;
-  font-weight: 540;
+  font-size: 15px;
+  font-weight: 550;
   letter-spacing: -.008em;
 }
 
