@@ -9,6 +9,7 @@ const state = {
   selectedDocumentId: 'doc-discharge',
   selectedDefectId: 'def-002',
   activeReportSection: 'report-overview',
+  selectedDashboardDept: '普外科',
   statusFilter: '全部',
   searchText: '',
   departmentFilter: '全部',
@@ -868,6 +869,25 @@ function renderDashboard() {
     { day: '06/27', total: 32, closed: 21 },
   ];
   const maxTrendValue = Math.max(...trendSeries.map((item) => item.total));
+  const activeDepartment = departments.find((department) => department.name === state.selectedDashboardDept) || departments[0];
+  const chartWidth = 620;
+  const chartHeight = 228;
+  const paddingX = 24;
+  const paddingTop = 16;
+  const paddingBottom = 30;
+  const innerWidth = chartWidth - (paddingX * 2);
+  const innerHeight = chartHeight - paddingTop - paddingBottom;
+  const pointX = (index) => paddingX + (innerWidth * index / (trendSeries.length - 1));
+  const pointY = (value) => paddingTop + innerHeight - ((value / maxTrendValue) * innerHeight);
+  const totalPoints = trendSeries.map((item, index) => `${pointX(index)},${pointY(item.total)}`).join(' ');
+  const closedPoints = trendSeries.map((item, index) => `${pointX(index)},${pointY(item.closed)}`).join(' ');
+  const areaPath = `M ${pointX(0)} ${pointY(trendSeries[0].total)} ${trendSeries.slice(1).map((item, index) => `L ${pointX(index + 1)} ${pointY(item.total)}`).join(' ')} L ${pointX(trendSeries.length - 1)} ${chartHeight - paddingBottom} L ${pointX(0)} ${chartHeight - paddingBottom} Z`;
+  const issueSources = [
+    { name: '文书完整性', value: 38 },
+    { name: '首页字段缺项', value: 24 },
+    { name: '签名节点缺失', value: 19 },
+    { name: '病程闭环不足', value: 14 },
+  ];
   element('#analyticsGrid').innerHTML = `
     <div class="analytics-cards analytics-cards-compact">
       <article><span>全院通过率</span><strong>74%</strong><small>较上月 +3.2%</small></article>
@@ -876,17 +896,17 @@ function renderDashboard() {
       <article><span>整改及时率</span><strong>69%</strong><small>平均 2.8 天</small></article>
     </div>
 
-    <section class="analytics-workbench">
-      <article class="department-compare">
+    <section class="analytics-workbench analytics-workbench-fixed">
+      <aside class="department-compare department-directory">
         <div class="section-heading compact">
           <div>
             <h4>科室对比</h4>
-            <p>通过率、均分与整改效率同屏比较</p>
+            <p>左侧固定目录，选中后右侧看趋势与重点</p>
           </div>
         </div>
-        <div class="department-rows">
+        <div class="department-rows department-directory-list">
           ${departments.map((department) => `
-            <article class="department-row">
+            <button class="department-row ${department.name === activeDepartment.name ? 'is-active' : ''}" data-dashboard-dept="${department.name}" type="button">
               <div class="department-row-main">
                 <div class="department-name-block">
                   <strong>${department.name}</strong>
@@ -913,42 +933,92 @@ function renderDashboard() {
                 <strong>${department.rectify}%</strong>
                 <div class="metric-track subtle"><span style="width:${department.rectify}%"></span></div>
               </div>
-            </article>
+            </button>
           `).join('')}
         </div>
-      </article>
+      </aside>
 
-      <article class="trend-panel trend-panel-refined">
-        <div class="section-heading compact">
-          <div>
-            <h4>缺陷趋势</h4>
-            <p>近 7 日新增与已闭环走势</p>
-          </div>
-          <div class="trend-legend">
-            <span><i class="legend-dot total"></i>新增缺陷</span>
-            <span><i class="legend-dot closed"></i>已闭环</span>
-          </div>
-        </div>
-        <div class="trend-chart">
-          ${trendSeries.map((item) => `
-            <div class="trend-column">
-              <div class="trend-bars">
-                <span class="bar total" style="height:${Math.round((item.total / maxTrendValue) * 100)}%"></span>
-                <span class="bar closed" style="height:${Math.round((item.closed / maxTrendValue) * 100)}%"></span>
-              </div>
-              <div class="trend-meta">
-                <strong>${item.total}</strong>
-                <small>${item.day}</small>
-              </div>
+      <section class="analytics-stage">
+        <article class="trend-panel trend-panel-refined">
+          <div class="section-heading compact">
+            <div>
+              <h4>缺陷趋势</h4>
+              <p>右侧分析区单独滚动，首屏只保留关键趋势</p>
             </div>
-          `).join('')}
-        </div>
-        <div class="trend-summary">
-          <div><span>峰值</span><strong>06/24</strong><small>68 条</small></div>
-          <div><span>闭环率</span><strong>61%</strong><small>较上周 +4%</small></div>
-          <div><span>主要来源</span><strong>文书完整性</strong><small>占比 38%</small></div>
-        </div>
-      </article>
+            <div class="trend-legend">
+              <span><i class="legend-dot total"></i>新增缺陷</span>
+              <span><i class="legend-dot closed"></i>已闭环</span>
+            </div>
+          </div>
+
+          <div class="trend-focus-card">
+            <div>
+              <span class="trend-focus-label">当前焦点</span>
+              <strong>${activeDepartment.name}</strong>
+              <small>${activeDepartment.focus}｜${activeDepartment.risk}风险</small>
+            </div>
+            <div class="trend-focus-metrics">
+              <div><span>通过率</span><strong>${activeDepartment.pass}%</strong></div>
+              <div><span>均分</span><strong>${activeDepartment.avg}</strong></div>
+              <div><span>及时率</span><strong>${activeDepartment.rectify}%</strong></div>
+            </div>
+          </div>
+
+          <div class="trend-svg-frame">
+            <svg class="trend-svg" viewBox="0 0 ${chartWidth} ${chartHeight}" role="img" aria-label="近7日缺陷趋势">
+              <defs>
+                <linearGradient id="trendAreaFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgba(126,164,209,0.28)"></stop>
+                  <stop offset="100%" stop-color="rgba(126,164,209,0.03)"></stop>
+                </linearGradient>
+              </defs>
+              ${[0, 1, 2, 3].map((step) => {
+                const y = paddingTop + ((innerHeight / 3) * step);
+                return `<line x1="${paddingX}" y1="${y}" x2="${chartWidth - paddingX}" y2="${y}" class="trend-grid-line"></line>`;
+              }).join('')}
+              <path d="${areaPath}" class="trend-area"></path>
+              <polyline points="${totalPoints}" class="trend-line total"></polyline>
+              <polyline points="${closedPoints}" class="trend-line closed"></polyline>
+              ${trendSeries.map((item, index) => `
+                <circle cx="${pointX(index)}" cy="${pointY(item.total)}" r="4.5" class="trend-point total"></circle>
+                <circle cx="${pointX(index)}" cy="${pointY(item.closed)}" r="4" class="trend-point closed"></circle>
+              `).join('')}
+            </svg>
+            <div class="trend-axis">
+              ${trendSeries.map((item) => `
+                <div class="trend-axis-item">
+                  <strong>${item.total}</strong>
+                  <small>${item.day}</small>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="analytics-bottom-grid">
+            <article class="source-panel">
+              <div class="mini-panel-head">
+                <h5>缺陷来源</h5>
+                <small>主要问题占比</small>
+              </div>
+              <div class="source-list">
+                ${issueSources.map((item) => `
+                  <div class="source-item">
+                    <span>${item.name}</span>
+                    <div class="source-bar"><i style="width:${item.value}%"></i></div>
+                    <strong>${item.value}%</strong>
+                  </div>
+                `).join('')}
+              </div>
+            </article>
+
+            <div class="trend-summary">
+              <div><span>峰值</span><strong>06/24</strong><small>68 条</small></div>
+              <div><span>闭环率</span><strong>61%</strong><small>较上周 +4%</small></div>
+              <div><span>主要来源</span><strong>文书完整性</strong><small>占比 38%</small></div>
+            </div>
+          </div>
+        </article>
+      </section>
     </section>
   `;
 }
@@ -991,6 +1061,12 @@ function bindEvents() {
       state.selectedRuleId = ruleButton.dataset.ruleId;
       renderBatch();
       showToast(`已选择：${rules.find((rule) => rule.id === state.selectedRuleId).name}`);
+    }
+
+    const dashboardDeptButton = event.target.closest('[data-dashboard-dept]');
+    if (dashboardDeptButton) {
+      state.selectedDashboardDept = dashboardDeptButton.dataset.dashboardDept;
+      renderDashboard();
     }
 
     const statusButton = event.target.closest('[data-status]');
