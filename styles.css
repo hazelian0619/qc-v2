@@ -373,8 +373,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .defect-card header { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 7px; }
 .defect-card p + p { margin-top: 8px; }
 .defect-meta, .defect-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
-.tiny-button { min-height: 28px; padding: 0 9px; color: var(--primary-2); background: rgba(255,255,255,.68); border: 1px solid var(--line); border-radius: 999px; font-weight: 540; }
-.tiny-button.danger { color: #9d3a30; background: var(--red-soft); border-color: #f4d6da; }
+.tiny-button { min-height: 28px; padding: 0 9px; color: #5a7597; background: rgba(248,250,253,.96); border: 1px solid rgba(36, 56, 86, .10); border-radius: 12px; font-weight: 500; }
+.tiny-button.danger { color: #a26b73; background: rgba(252, 243, 246, .94); border-color: rgba(174, 116, 127, .12); }
 .report-paper { padding: 26px; background: white; border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
 .report-paper h4 { margin: 0 0 8px; font-size: 24px; font-weight: 620; }
 .report-paper h5 { margin: 18px 0 8px; font-size: 16px; }
@@ -492,7 +492,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .rule-tile h4,
 .rectify-card strong,
 .doc-item strong { font-weight: 560; }
-.button, .text-button, .tiny-button, .status-pill, .risk-pill { font-weight: 530; }
+.button, .text-button, .tiny-button, .status-pill, .risk-pill { font-weight: 500; }
 
 /* Review fixes: active defect card, evidence mark, doc status pills, 3-col filters */
 .defect-card.is-active { border-color: rgba(36,116,169,.42); box-shadow: 0 0 0 3px rgba(36,116,169,.06); }
@@ -562,12 +562,12 @@ select:focus-visible {
 }
 
 .brand-mark {
-  color: #f7fbff;
-  background: linear-gradient(180deg, #8fb1d9, #6f91bf);
-  border: 1px solid rgba(70, 101, 145, .14);
-  border-radius: 10px;
-  font-weight: 520;
-  box-shadow: 0 10px 22px rgba(73, 102, 145, .12);
+  color: #57779d;
+  background: rgba(236, 243, 251, .9);
+  border: 1px solid rgba(87, 119, 157, .14);
+  border-radius: 9px;
+  font-weight: 500;
+  box-shadow: none;
 }
 
 .eyebrow {
@@ -606,7 +606,7 @@ select:focus-visible {
 
 .nav-item {
   color: #5d6f86;
-  border-radius: 14px;
+  border-radius: 12px;
 }
 
 .nav-item span,
@@ -628,12 +628,12 @@ select:focus-visible {
 
 .nav-item:hover {
   color: var(--primary-2);
-  background: rgba(232, 239, 248, .78);
+  background: rgba(236, 242, 249, .72);
 }
 
 .nav-item.is-active {
   color: var(--primary-2);
-  background: rgba(224, 234, 247, .86);
+  background: rgba(232, 239, 247, .82);
 }
 
 .nav-item::before {
@@ -674,33 +674,37 @@ select:focus-visible {
 }
 
 .button {
-  border-radius: 999px;
+  min-height: 34px;
+  padding: 0 13px;
+  border-radius: 15px;
+  font-weight: 490;
 }
 
 .button-primary {
-  color: #f8fbff;
-  background: linear-gradient(180deg, #84a8d4, #6c8fbd);
-  border-color: rgba(90, 118, 161, .10);
-  box-shadow: 0 10px 24px rgba(73, 102, 145, .14);
+  color: #4b678b;
+  background: rgba(230, 239, 249, .98);
+  border-color: rgba(87, 119, 157, .14);
+  box-shadow: none;
 }
 
 .button-secondary {
   color: var(--primary-2);
-  background: rgba(240, 246, 252, .88);
-  border-color: rgba(96, 123, 163, .12);
-  box-shadow: var(--glass-shadow);
+  background: rgba(246, 249, 253, .92);
+  border-color: rgba(36, 56, 86, .10);
+  box-shadow: none;
 }
 
 .button-ghost {
   color: var(--primary-2);
-  background: rgba(255,255,255,.62);
-  border-color: var(--line);
-  box-shadow: var(--glass-shadow);
+  background: rgba(255,255,255,.54);
+  border-color: rgba(36, 56, 86, .09);
+  box-shadow: none;
 }
 
 .button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(27, 49, 84, .08);
+  box-shadow: none;
+  filter: brightness(.985);
 }
 
 .control-strip,
@@ -833,7 +837,7 @@ select:focus-visible {
 .doc-item.is-active,
 .nav-item.is-active,
 .compact-status span {
-  background-color: rgba(223, 234, 248, .92);
+  background-color: rgba(232, 239, 247, .92);
 }
 
 .rank-index,
@@ -850,26 +854,29 @@ select:focus-visible {
 }
 
 .segment-button {
-  background: rgba(255,255,255,.68);
+  min-height: 30px;
+  padding: 0 10px;
+  background: rgba(247, 250, 253, .94);
   border-color: rgba(36, 56, 86, .08);
+  border-radius: 11px;
 }
 
 .status-pill.calm,
 .risk-pill.low {
-  color: #58789e;
-  background: var(--aqua-soft);
+  color: #5f7895;
+  background: rgba(241, 247, 252, .94);
 }
 
 .status-pill.warning,
 .risk-pill.mid {
-  color: #8d6b43;
-  background: var(--amber-soft);
+  color: #92734d;
+  background: rgba(251, 245, 234, .92);
 }
 
 .status-pill.danger,
 .risk-pill.high {
-  color: #9a6470;
-  background: var(--red-soft);
+  color: #9a6a74;
+  background: rgba(252, 242, 245, .92);
 }
 
 .bars span,
