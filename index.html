@@ -353,22 +353,34 @@
         </section>
 
       <section class="view" id="reportView" aria-labelledby="reportTitle">
-         <section class="surface">
-           <div class="section-heading">
-             <div>
-               <p class="eyebrow">报告输出</p>
-               <h3 id="reportTitle">质控报告</h3>
-             </div>
-             <div class="action-row inline-actions">
-               <button class="button button-secondary" id="reportPrevButton" type="button">上一份</button>
-               <button class="button button-secondary" id="reportNextButton" type="button">下一份</button>
-               <button class="button button-secondary" id="reportPdfButton" type="button">导出 PDF</button>
-               <button class="button button-primary" id="reportBatchButton" type="button">批量导出</button>
-             </div>
-           </div>
-           <div class="report-paper" id="reportPaper"></div>
-         </section>
-       </section>
+        <div class="report-shell">
+          <section class="surface report-head">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">报告输出</p>
+                <h3 id="reportTitle">质控报告</h3>
+              </div>
+              <div class="action-row inline-actions">
+                <button class="button button-secondary" id="reportPrevButton" type="button">上一份</button>
+                <button class="button button-secondary" id="reportNextButton" type="button">下一份</button>
+                <button class="button button-secondary" id="reportPdfButton" type="button">导出 PDF</button>
+                <button class="button button-primary" id="reportBatchButton" type="button">批量导出</button>
+              </div>
+            </div>
+          </section>
+
+          <div class="report-workspace">
+            <aside class="surface report-nav" aria-label="报告目录">
+              <p class="eyebrow">文书目录</p>
+              <div class="report-outline" id="reportOutline"></div>
+            </aside>
+
+            <section class="surface report-panel">
+              <div class="report-panel-scroll" id="reportPaper"></div>
+            </section>
+          </div>
+        </div>
+      </section>
 
        <section class="view" id="rulesView">
         <section class="surface">

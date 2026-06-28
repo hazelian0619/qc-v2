@@ -8,6 +8,7 @@ const state = {
   selectedCaseId: 'case-001',
   selectedDocumentId: 'doc-discharge',
   selectedDefectId: 'def-002',
+  activeReportSection: 'report-overview',
   statusFilter: '全部',
   searchText: '',
   departmentFilter: '全部',
@@ -696,30 +697,112 @@ function renderReport() {
   const caseItem = selectedCase();
   const defects = caseItem.defects;
   const passText = isPassed(caseItem) ? '通过' : '未通过';
+  const reportSections = [
+    { id: 'report-overview', title: '基本信息', meta: `${caseItem.department}｜${caseItem.visitNo}` },
+    { id: 'report-defects', title: '缺陷明细', meta: `${defects.length} 条问题` },
+    { id: 'report-actions', title: '整改建议', meta: '处理路径' },
+    { id: 'report-documents', title: '文书完整度', meta: `${caseItem.documents.length} 份文书` },
+  ];
+
+  if (!reportSections.some((section) => section.id === state.activeReportSection)) {
+    state.activeReportSection = reportSections[0].id;
+  }
+
+  element('#reportOutline').innerHTML = reportSections.map((section) => `
+    <button
+      class="report-outline-item ${section.id === state.activeReportSection ? 'is-active' : ''}"
+      data-report-section="${section.id}"
+      type="button"
+    >
+      <strong>${section.title}</strong>
+      <span>${section.meta}</span>
+    </button>
+  `).join('');
+
   element('#reportPaper').innerHTML = `
-    <h4>${caseItem.patient}</h4>
-    <p>${caseItem.department}｜${caseItem.visitNo}｜${caseItem.genderAge}｜主治：${caseItem.doctor}｜${caseItem.diagnosis}</p>
-    <dl>
-      <div><dt>病例总分</dt><dd>${caseItem.score} 分</dd></div>
-      <div><dt>质控结论</dt><dd>${passText}</dd></div>
-      <div><dt>文书完整度</dt><dd>${caseItem.completeness}</dd></div>
-      <div><dt>风险等级</dt><dd>${caseItem.risk}风险</dd></div>
-    </dl>
-    <dl>
-      <div><dt>严重缺陷</dt><dd>${caseItem.severe} 个</dd></div>
-      <div><dt>一般缺陷</dt><dd>${caseItem.normal} 个</dd></div>
-      <div><dt>一票否决</dt><dd>${caseItem.veto ? '有' : '无'}</dd></div>
-      <div><dt>质控状态</dt><dd>${caseItem.status}</dd></div>
-    </dl>
-    <h5>缺陷明细</h5>
-    <ol>${defects.map((defect) => `
-      <li><strong>${defect.title}</strong>（${defect.level}｜${defect.type}｜扣 ${defect.deduction} 分）<br>规则依据：${defect.rule}<br>AI 判断理由：${defect.reason}<br>原文证据：${defect.evidence}<br>整改建议：${defect.suggestion}<br>复核状态：${defect.reviewStatus}</li>
-    `).join('')}</ol>
-    <h5>整改建议汇总</h5>
-    <p>请责任科室补齐缺失文书，完善关键治疗记录与疗效评价。质控科人工确认后标记为待整改，进入复核流程。</p>
-    <h5>文书完整度明细</h5>
-    <p>${caseItem.documents.map((doc) => `${doc.name}：${doc.status}`).join('；')}。</p>
+    <article class="report-paper">
+      <section class="report-section" id="report-overview">
+        <h4>${caseItem.patient}</h4>
+        <p class="report-patient-meta">${caseItem.department}｜${caseItem.visitNo}｜${caseItem.genderAge}｜主治：${caseItem.doctor}｜${caseItem.diagnosis}</p>
+        <dl>
+          <div><dt>病例总分</dt><dd>${caseItem.score} 分</dd></div>
+          <div><dt>质控结论</dt><dd>${passText}</dd></div>
+          <div><dt>文书完整度</dt><dd>${caseItem.completeness}</dd></div>
+          <div><dt>风险等级</dt><dd>${caseItem.risk}风险</dd></div>
+        </dl>
+        <dl>
+          <div><dt>严重缺陷</dt><dd>${caseItem.severe} 个</dd></div>
+          <div><dt>一般缺陷</dt><dd>${caseItem.normal} 个</dd></div>
+          <div><dt>一票否决</dt><dd>${caseItem.veto ? '有' : '无'}</dd></div>
+          <div><dt>质控状态</dt><dd>${caseItem.status}</dd></div>
+        </dl>
+      </section>
+
+      <section class="report-section" id="report-defects">
+        <h5 class="report-section-title">缺陷明细</h5>
+        <ol class="report-defect-list">${defects.map((defect) => `
+          <li>
+            <strong>${defect.title}</strong>（${defect.level}｜${defect.type}｜扣 ${defect.deduction} 分）<br>
+            规则依据：${defect.rule}<br>
+            AI 判断理由：${defect.reason}<br>
+            原文证据：${defect.evidence}<br>
+            整改建议：${defect.suggestion}<br>
+            复核状态：${defect.reviewStatus}
+          </li>
+        `).join('')}</ol>
+      </section>
+
+      <section class="report-section" id="report-actions">
+        <h5 class="report-section-title">整改建议汇总</h5>
+        <p class="report-note">请责任科室补齐缺失文书，完善关键治疗记录与疗效评价。质控科人工确认后标记为待整改，进入复核流程。</p>
+      </section>
+
+      <section class="report-section" id="report-documents">
+        <h5 class="report-section-title">文书完整度明细</h5>
+        <div class="report-doc-list">
+          ${caseItem.documents.map((doc) => `
+            <article class="report-doc-item">
+              <div>
+                <strong>${doc.name}</strong>
+                <small>${doc.meta}</small>
+              </div>
+              <span class="status-pill ${doc.status.includes('缺陷') || doc.status.includes('未提供') || doc.status.includes('应有未有') ? 'warning' : 'calm'}">${doc.status}</span>
+            </article>
+          `).join('')}
+        </div>
+      </section>
+    </article>
   `;
+
+  syncReportSection();
+}
+
+function syncReportSection(scrollTargetId) {
+  const reportBody = element('#reportPaper');
+  if (!reportBody) return;
+
+  if (scrollTargetId) {
+    const section = element(`#${scrollTargetId}`);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      state.activeReportSection = scrollTargetId;
+    }
+  } else {
+    const sections = elements('.report-section');
+    const containerTop = reportBody.getBoundingClientRect().top;
+    let currentId = sections[0]?.id;
+
+    sections.forEach((section) => {
+      const offset = section.getBoundingClientRect().top - containerTop;
+      if (offset <= 48) currentId = section.id;
+    });
+
+    if (currentId) state.activeReportSection = currentId;
+  }
+
+  elements('.report-outline-item').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.reportSection === state.activeReportSection);
+  });
 }
 
 function renderRectify() {
@@ -904,13 +987,20 @@ function bindEvents() {
     if (reportPrev) {
       const index = cases.findIndex((c) => c.id === state.selectedCaseId);
       state.selectedCaseId = cases[(index - 1 + cases.length) % cases.length].id;
+      state.activeReportSection = 'report-overview';
       renderReport();
     }
     const reportNext = event.target.closest('#reportNextButton');
     if (reportNext) {
       const index = cases.findIndex((c) => c.id === state.selectedCaseId);
       state.selectedCaseId = cases[(index + 1) % cases.length].id;
+      state.activeReportSection = 'report-overview';
       renderReport();
+    }
+    const reportSectionButton = event.target.closest('[data-report-section]');
+    if (reportSectionButton) {
+      state.activeReportSection = reportSectionButton.dataset.reportSection;
+      syncReportSection(state.activeReportSection);
     }
     const reportPdf = event.target.closest('#reportPdfButton');
     if (reportPdf) showToast(`已生成 ${selectedCase().patient} 的 PDF 报告`);
@@ -1039,6 +1129,10 @@ function bindEvents() {
         id.includes('Discharge') ? state.batchFilters.dischargeEndDate : state.batchFilters.admitEndDate,
       )}`);
     });
+  });
+
+  element('#reportPaper').addEventListener('scroll', () => {
+    if (state.activeView === 'report') syncReportSection();
   });
 
 }
