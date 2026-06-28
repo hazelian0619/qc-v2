@@ -735,10 +735,17 @@ function renderRectify() {
       <p>${lane.hint}</p>
       ${lane.items.map((caseItem) => `
         <article class="rectify-card">
-          <strong>${caseItem.patient}｜${caseItem.department}</strong>
-          <span>${caseItem.visitNo}｜${caseItem.diagnosis}</span>
-          <div class="defect-meta"><span class="risk-pill ${riskClass(caseItem.risk)}">${caseItem.risk}风险</span><span class="status-pill warning">${caseItem.completeness}</span></div>
-          <button class="tiny-button" data-case-detail="${caseItem.id}" type="button">进入复核</button>
+          <div class="rectify-card-main">
+            <strong>${caseItem.patient}｜${caseItem.department}</strong>
+            <span>${caseItem.visitNo}｜${caseItem.diagnosis}</span>
+          </div>
+          <div class="rectify-card-meta">
+            <span class="risk-pill ${riskClass(caseItem.risk)}">${caseItem.risk}风险</span>
+            <span class="status-pill warning">${caseItem.completeness}</span>
+          </div>
+          <div class="rectify-card-actions">
+            <button class="tiny-button" data-case-detail="${caseItem.id}" type="button">进入复核</button>
+          </div>
         </article>
       `).join('') || '<div class="empty-card">暂无病例</div>'}
     </section>
