@@ -1858,3 +1858,296 @@ body {
     overflow: visible;
   }
 }
+
+/* Inner-scroll refinement: views are fixed panels; only their working blocks scroll. */
+.view.is-visible {
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+#overviewView.is-visible {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) minmax(118px, .46fr);
+  gap: 14px;
+}
+
+#overviewView .control-strip,
+#overviewView .metric-grid,
+#overviewView .dashboard-grid,
+#overviewView .task-strip {
+  min-height: 0;
+}
+
+#overviewView .dashboard-grid {
+  height: 100%;
+}
+
+#overviewView .surface,
+#overviewView .task-strip {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
+#overviewView .case-queue,
+#overviewView .rank-list,
+#overviewView .task-list {
+  min-height: 0;
+  flex: 1;
+}
+
+#overviewView .case-queue {
+  overflow: auto;
+}
+
+#overviewView .rank-list,
+#overviewView .task-list {
+  overflow: hidden;
+}
+
+#overviewView .task-strip {
+  margin-top: 0;
+}
+
+.overview-action-card {
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.metric-card.overview-action-card,
+.rank-item.overview-action-card,
+.task-item.overview-action-card {
+  border-style: solid;
+}
+
+.overview-action-card:hover {
+  border-color: rgba(36, 116, 169, .22);
+  filter: brightness(.995);
+  transform: translateY(-1px);
+}
+
+.metric-card {
+  text-align: left;
+}
+
+.metric-card em,
+.task-item small,
+.rank-item small {
+  display: block;
+  margin-top: 6px;
+  color: var(--primary-2);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 560;
+  opacity: .82;
+}
+
+.overview-click-row {
+  cursor: pointer;
+}
+
+.rank-list {
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+}
+
+.rank-item {
+  grid-template-columns: 38px minmax(0, 1fr) 32px;
+  min-height: 0;
+  padding: 12px 10px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: rgba(255,255,255,.48);
+}
+
+.rank-index {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.rank-item > div {
+  min-width: 0;
+}
+
+.rank-item strong {
+  line-height: 1.18;
+}
+
+.rank-bar {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.task-list {
+  align-items: stretch;
+}
+
+.task-item {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+#batchView.is-visible .split-layout,
+#reviewView.is-visible #reviewWorkbench,
+#doctorView.is-visible .doctor-workspace,
+#recoveryView.is-visible .recovery-workspace,
+#reportView.is-visible .report-head,
+#rulesView.is-visible > .surface {
+  height: 100%;
+  min-height: 0;
+}
+
+#batchView.is-visible .split-layout,
+#doctorView.is-visible .doctor-workspace,
+#recoveryView.is-visible .recovery-workspace,
+#rulesView.is-visible > .surface {
+  overflow: hidden;
+}
+
+#batchView.is-visible .split-layout > .surface,
+#doctorView.is-visible .doctor-workspace > .surface,
+#recoveryView.is-visible .recovery-workspace,
+#reportView.is-visible .report-head,
+#rulesView.is-visible > .surface {
+  min-height: 0;
+}
+
+#batchView.is-visible .split-layout > .surface,
+#doctorView.is-visible .doctor-workspace > .surface,
+#recoveryView.is-visible .recovery-workspace,
+#reportView.is-visible .report-panel-scroll {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+#rulesView.is-visible > .surface {
+  display: flex;
+  flex-direction: column;
+}
+
+#rulesView .rules-dashboard-grid {
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+#rulesView .rule-board,
+#rulesView .analytics-grid {
+  min-height: 0;
+}
+
+#rulesView .analytics-grid {
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+
+#rulesView .rule-board {
+  align-content: start;
+}
+
+@media (max-width: 1180px) {
+  .view.is-visible {
+    overflow: visible;
+  }
+
+  #overviewView.is-visible {
+    display: block;
+  }
+
+  #overviewView .task-strip {
+    margin-top: 14px;
+  }
+
+  #overviewView .rank-list,
+  #overviewView .task-list,
+  #rulesView .analytics-grid {
+    overflow: visible;
+  }
+}
+
+/* Report page corrected to keep the header compact and the report body as the inner scroll area. */
+#reportView.is-visible .report-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#reportView.is-visible .report-head {
+  height: auto;
+}
+
+#reportView.is-visible .report-workspace {
+  min-height: 0;
+  height: 100%;
+}
+
+#reportView.is-visible .report-nav,
+#reportView.is-visible .report-panel {
+  height: 100%;
+  min-height: 0;
+}
+
+/* Report page corrected to keep the header compact and the report body as the inner scroll area. */
+#reportView.is-visible .report-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#reportView.is-visible .report-head {
+  height: auto;
+}
+
+#reportView.is-visible .report-workspace {
+  min-height: 0;
+  height: 100%;
+}
+
+#reportView.is-visible .report-nav,
+#reportView.is-visible .report-panel {
+  height: 100%;
+  min-height: 0;
+}
+
+/* Overview task strip and review workbench inner scrolling. */
+#overviewView.is-visible {
+  grid-template-rows: auto auto minmax(0, 1fr) minmax(142px, .56fr);
+}
+
+#overviewView .task-list {
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 2px;
+}
+
+#overviewView .task-item {
+  min-height: 112px;
+}
+
+#reviewView.is-visible #reviewWorkbench,
+#reviewView.is-visible .review-workbench {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#reviewView.is-visible .review-queue-panel,
+#reviewView.is-visible .review-case-panel,
+#reviewView.is-visible .evidence-panel {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}

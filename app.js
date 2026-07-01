@@ -64,18 +64,18 @@ const reportTemplates = [
 ];
 
 const metrics = [
-  { label: '病例', value: '1,248', hint: '本月' },
-  { label: '均分', value: '86.4', hint: '+0.2' },
-  { label: '未通过', value: '126', hint: '低于 75 分' },
-  { label: '整改中', value: '72', hint: '+3' },
-  { label: '否决项', value: '9', hint: '高风险' },
-  { label: '缺材料', value: '34', hint: '待确认' },
+  { label: '病例', value: '1,248', hint: '本月', target: 'batch', action: '查看导入范围' },
+  { label: '均分', value: '86.4', hint: '+0.2', target: 'report', action: '查看院级报告' },
+  { label: '未通过', value: '126', hint: '低于 75 分', target: 'review', action: '进入复核队列' },
+  { label: '整改中', value: '72', hint: '+3', target: 'doctor', action: '查看临床整改' },
+  { label: '否决项', value: '9', hint: '高风险', target: 'review', action: '处理高风险' },
+  { label: '缺材料', value: '34', hint: '待确认', target: 'rules', action: '查看规则依据' },
 ];
 
 const tasks = [
-  { name: '出院病例终末质控', scope: '全院｜128 例', progress: 72, status: '质检中' },
-  { name: '手术病例专项', scope: '普外科｜34 例', progress: 100, status: '待复核' },
-  { name: '首页完整性复核', scope: '病案室｜56 例', progress: 44, status: '排队中' },
+  { name: '出院病例终末质控', scope: '全院｜128 例', progress: 72, status: '质检中', target: 'batch', action: '继续查看质检进度' },
+  { name: '手术病例专项', scope: '普外科｜34 例', progress: 100, status: '待复核', target: 'review', action: '进入批量复核' },
+  { name: '首页完整性复核', scope: '病案室｜56 例', progress: 44, status: '排队中', target: 'rules', action: '核对首页规则' },
 ];
 
 const importLogEntries = [
@@ -90,10 +90,10 @@ const rules = [
 ];
 
 const defectRanking = [
-  { name: '文书完整性', count: 18, percent: 92 },
-  { name: '出院小结缺项', count: 14, percent: 74 },
-  { name: '医嘱病程不一致', count: 9, percent: 52 },
-  { name: '签名节点缺失', count: 7, percent: 38 },
+  { name: '文书完整性', count: 18, percent: 92, target: 'rules', note: '定位基础规则' },
+  { name: '出院小结缺项', count: 14, percent: 74, target: 'review', note: '查看相关病历' },
+  { name: '医嘱病程不一致', count: 9, percent: 52, target: 'review', note: '进入缺陷复核' },
+  { name: '签名节点缺失', count: 7, percent: 38, target: 'rules', note: '查看签名节点' },
 ];
 
 const cases = [
@@ -563,11 +563,12 @@ function riskClass(risk) {
 
 function renderMetrics() {
   element('#metricGrid').innerHTML = metrics.map((metric) => `
-    <article class="metric-card">
+    <button class="metric-card overview-action-card" data-view-link="${metric.target}" type="button" aria-label="${metric.action}">
       <span>${metric.label}</span>
       <strong>${metric.value}</strong>
       <small>${metric.hint}</small>
-    </article>
+      <em>${metric.action}</em>
+    </button>
   `).join('');
 }
 
@@ -578,7 +579,7 @@ function renderOverview() {
     <table class="compact-case-table">
       <thead><tr><th>记录号</th><th>患者</th><th>科室</th><th>主要诊断</th><th>完整度</th><th>严重</th><th>一般</th><th>状态</th><th>操作</th></tr></thead>
       <tbody>${priorityCases.map((caseItem) => `
-        <tr>
+        <tr class="overview-click-row" data-case-detail="${caseItem.id}" tabindex="0" aria-label="查看 ${caseItem.patient} 的复核详情">
           <td>${caseItem.visitNo}</td>
           <td><strong>${caseItem.patient}</strong></td>
           <td>${caseItem.department}</td>
@@ -594,25 +595,27 @@ function renderOverview() {
   `;
 
   element('#defectRanking').innerHTML = defectRanking.map((defectItem, index) => `
-    <div class="rank-item">
+    <button class="rank-item overview-action-card" data-view-link="${defectItem.target}" type="button" aria-label="${defectItem.name}：${defectItem.note}">
       <span class="rank-index">${index + 1}</span>
       <div>
         <strong>${defectItem.name}</strong>
+        <small>${defectItem.note}</small>
         <div class="rank-bar"><span style="width:${defectItem.percent}%"></span></div>
       </div>
       <strong>${defectItem.count}</strong>
-    </div>
+    </button>
   `).join('');
 
   element('#taskList').innerHTML = tasks.map((task) => `
-    <article class="task-item">
+    <button class="task-item overview-action-card" data-view-link="${task.target}" type="button" aria-label="${task.action}">
       <div class="section-heading compact">
         <strong>${task.name}</strong>
         <span class="status-pill ${task.progress === 100 ? 'calm' : 'warning'}">${task.status}</span>
       </div>
       <p>${task.scope}</p>
       <div class="progress-track"><span style="width:${task.progress}%"></span></div>
-    </article>
+      <small>${task.action}</small>
+    </button>
   `).join('');
 }
 
@@ -1622,6 +1625,17 @@ function bindEvents() {
       renderRecoveryWorkspace();
       showToast(`已将 ${state.selectedResultIds.length} 份病例加入人工复核队列`);
     }
+  });
+
+  document.body.addEventListener('keydown', (event) => {
+    if (!['Enter', ' '].includes(event.key)) return;
+    const row = event.target.closest('.overview-click-row[data-case-detail]');
+    if (!row) return;
+    event.preventDefault();
+    state.selectedCaseId = row.dataset.caseDetail;
+    state.selectedDocumentId = 'doc-discharge';
+    state.selectedDefectId = selectedCase().defects[0]?.id || '';
+    navigate('review');
   });
 
   element('#globalSearch').addEventListener('input', (event) => {
