@@ -19,7 +19,9 @@ const state = {
   reportIncludedDefects: [],
   selectedCandidateIds: ['case-001', 'case-003', 'case-005'],
   selectedResultIds: [],
+  selectedDoctorCaseId: '',
   importMode: 'HIS/EMR',
+  activeReportTemplate: 'clinical',
   batchFilters: {
     dischargeStartDate: '2026-06-01',
     dischargeEndDate: '2026-06-27',
@@ -31,6 +33,35 @@ const state = {
     defectWidth: 376,
   },
 };
+
+const lifecycleStates = {
+  pendingAi: '待AI质检',
+  aiRunning: 'AI质检中',
+  aiDone: 'AI已完成',
+  pendingReview: '待人工复核',
+  reviewing: '质控复核中',
+  pendingDoctor: '待临床整改',
+  doctorFixing: '整改中',
+  appealed: '申诉中',
+  pendingRecovery: '已整改待复核',
+  overdue: '整改超时',
+  passed: '复核通过',
+};
+
+const defectStatuses = {
+  pending: '待人工复核',
+  accepted: '已认可',
+  rejected: '已驳回',
+  adjusted: '已改判',
+  manual: '人工补录',
+  returned: '待整改',
+};
+
+const reportTemplates = [
+  { id: 'clinical', name: '临床科室整改报告', audience: '临床科室 / 责任医生', focus: '缺陷明细、整改要求、责任医生、期限、复核结果' },
+  { id: 'hospital', name: '院级质控月报', audience: '质控委员会 / 院领导', focus: '全院趋势、科室排名、高频缺陷、整改闭环率' },
+  { id: 'review', name: '等级评审/国考报告', audience: '评审与指标汇报', focus: '指标口径、规则版本、样本范围、操作追溯' },
+];
 
 const metrics = [
   { label: '病例', value: '1,248', hint: '本月' },
@@ -110,6 +141,10 @@ const cases = [
         reason: 'AI 检查到该病例 HIS/EMR 返回的文书列表中没有病案首页。但该病例为住院终末病历，按规则原则上应包含首页。AI 无法自行判断是"测试数据缺失"还是"医生书写遗漏"，因此标记为严重并提交人工确认。',
         evidence: '病案首页未从 HIS/EMR 返回',
         deduction: 8,
+        source: 'AI',
+        originalDeduction: 8,
+        finalDeduction: 8,
+        reviewReason: '',
         reviewStatus: '待人工复核',
         suggestion: '确认是否应有未有，必要时发起整改。',
       },
@@ -123,6 +158,10 @@ const cases = [
         reason: 'AI 对比了病程记录与出院记录，发现 2026-06-15 病程中明确记录了"调整抗菌药物为头孢哌酮舒巴坦"，但出院记录全文未提及调整原因、疗效评价及后续方案。属于跨文书信息不一致导致的出院小结缺项。',
         evidence: '2026-06-15 调整抗菌药物；出院记录未说明调整原因及疗效评价',
         deduction: 3,
+        source: 'AI',
+        originalDeduction: 3,
+        finalDeduction: 3,
+        reviewReason: '',
         reviewStatus: '待人工复核',
         suggestion: '补充调整依据、反应及复查结果。',
       },
@@ -136,6 +175,10 @@ const cases = [
         reason: 'AI 在病历中识别到"特殊抗菌药物治疗"的记录，按规则可能需要对应知情同意材料，但系统未关联到。因规则未明确该场景是否必须有，AI 标记为一般并提交人工确认。',
         evidence: '本次病例存在特殊抗菌药物治疗记录，但未关联知情同意材料',
         deduction: 2,
+        source: 'AI',
+        originalDeduction: 2,
+        finalDeduction: 2,
+        reviewReason: '',
         reviewStatus: '待人工复核',
         suggestion: '人工确认适用场景。',
       },
@@ -158,7 +201,7 @@ const cases = [
     normal: 3,
     veto: false,
     risk: '中',
-    status: 'AI 已完成',
+    status: 'AI已完成',
     reportStatus: '待复核',
     missingDocs: [],
     documents: [
@@ -186,6 +229,10 @@ const cases = [
         reason: 'AI 检查日常病程记录（6/13—6/21），发现仅 6/15 记录了利尿剂调整，但全程未记录每日出入量。心衰患者出入量是评估容量负荷和利尿效果的核心指标，缺项会影响疗效判断的连续性。',
         evidence: '6/13—6/21 病程记录中未见每日出入量及体重数据',
         deduction: 3,
+        source: 'AI',
+        originalDeduction: 3,
+        finalDeduction: 3,
+        reviewReason: '',
         reviewStatus: '待人工复核',
         suggestion: '补充每日出入量记录及体重变化趋势。',
       },
@@ -208,7 +255,7 @@ const cases = [
     normal: 6,
     veto: true,
     risk: '高',
-    status: '待整改',
+    status: '待临床整改',
     reportStatus: '已生成',
     missingDocs: ['麻醉记录'],
     documents: [
@@ -236,6 +283,10 @@ const cases = [
         reason: 'AI 从手术记录中识别到"腰麻"这一麻醉方式，说明手术确实在麻醉下进行，应有麻醉记录。但 HIS/EMR 未返回任何麻醉记录文书。结合手术已执行的事实，AI 判定为"应有未有"而非"材料未提供"，属于医生书写遗漏。',
         evidence: '手术记录明确记录腰麻，但系统无对应麻醉记录',
         deduction: 10,
+        source: 'AI',
+        originalDeduction: 10,
+        finalDeduction: 10,
+        reviewReason: '',
         reviewStatus: '待人工复核',
         suggestion: '补充完整麻醉记录，包括麻醉方式、用药、术中监护。',
       },
@@ -249,6 +300,10 @@ const cases = [
         reason: 'AI 识别到手术记录中有"出血约 200mL"的描述，但缺少是否输血、出血量的精确测量方式。髋关节置换术属中大型手术，出血量是术后管理的重要依据。',
         evidence: '手术记录仅写"出血约 200mL"，未记录输血情况及测量方式',
         deduction: 3,
+        source: 'AI',
+        originalDeduction: 3,
+        finalDeduction: 3,
+        reviewReason: '',
         reviewStatus: '待人工复核',
         suggestion: '补充精确出血量、输血记录及术中吸引量。',
       },
@@ -271,7 +326,7 @@ const cases = [
     normal: 1,
     veto: false,
     risk: '低',
-    status: '已通过',
+    status: '复核通过',
     reportStatus: '已归档',
     missingDocs: [],
     documents: [
@@ -297,6 +352,10 @@ const cases = [
         reason: 'AI 检查出院医嘱，发现阿司匹林仅写"规律服药"未注明疗程。TIA 患者抗血小板治疗时长与卒中预防直接相关，建议明确疗程。',
         evidence: '出院医嘱中阿司匹林仅写"规律服药"',
         deduction: 2,
+        source: 'AI',
+        originalDeduction: 2,
+        finalDeduction: 2,
+        reviewReason: '',
         reviewStatus: '已通过',
         suggestion: '明确抗血小板疗程（如 3—6 个月）。',
       },
@@ -347,6 +406,10 @@ const cases = [
         reason: 'AI 识别到手术记录（6/21 21:30 腹腔镜阑尾切除术），但系统中无术前讨论记录。患者 71 岁，属高龄手术患者，按规则应有术前讨论。AI 判定为"应有未有"。虽为急诊手术，规则要求可简化但不能完全省略。',
         evidence: '已行急诊手术（6/21 21:30），患者 71 岁，但无术前讨论记录',
         deduction: 8,
+        source: 'AI',
+        originalDeduction: 8,
+        finalDeduction: 8,
+        reviewReason: '',
         reviewStatus: '待人工复核',
         suggestion: '补充术前讨论记录，包括手术指征、风险评估、替代方案。',
       },
@@ -360,6 +423,10 @@ const cases = [
         reason: 'AI 检查手术记录中有"切除标本送病理"的描述，但出院记录未提及病理结果。化脓性阑尾炎的病理分型（单纯性/化脓性/坏疽性）影响后续随访方案，缺项会导致随访依据不足。',
         evidence: '手术记录提及送病理，但出院记录未记录病理结果',
         deduction: 3,
+        source: 'AI',
+        originalDeduction: 3,
+        finalDeduction: 3,
+        reviewReason: '',
         reviewStatus: '待人工复核',
         suggestion: '补充术后病理结果，并根据分型调整随访计划。',
       },
@@ -367,16 +434,19 @@ const cases = [
   },
 ];
 
-const statusTabs = ['全部', '待质检', '质检中', 'AI 已完成', '待人工复核', '待整改', '已通过', '未通过'];
+const statusTabs = ['全部', '待AI质检', 'AI质检中', 'AI已完成', '待人工复核', '待临床整改', '复核通过', '未通过'];
 
 const viewMeta = {
-  overview: '质控工作台',
-  batch: '质检任务',
+  overview: '总览驾驶舱',
+  batch: '导入质检',
+  review: '批量复核',
+  doctor: '临床整改',
+  recovery: '回收复核',
   results: '质检结果',
   detail: '单病例质控',
-  report: '质控报告',
+  report: '报告中心',
   rectify: '整改复核',
-  rules: '规则与看板',
+  rules: '规则看板',
 };
 
 const element = (selector) => document.querySelector(selector);
@@ -414,8 +484,59 @@ function showToast(message) {
   showToast.timerId = window.setTimeout(() => toast.classList.remove('is-visible'), 2600);
 }
 
+function activeDefects(caseItem) {
+  return caseItem.defects.filter((defect) => defect.reviewStatus !== defectStatuses.rejected);
+}
+
+function recalculatedScore(caseItem) {
+  const totalDeduction = activeDefects(caseItem).reduce((sum, defect) => sum + (Number(defect.finalDeduction ?? defect.points) || 0), 0);
+  return Math.max(0, 100 - totalDeduction);
+}
+
+function scoreLabel(caseItem) {
+  const recalculated = recalculatedScore(caseItem);
+  return recalculated === caseItem.score ? `AI初判 ${caseItem.score}分` : `AI初判 ${caseItem.score}分 → 质控改判 ${recalculated}分`;
+}
+
+function addCaseLog(caseItem, title, detail) {
+  caseItem.logs = caseItem.logs || [];
+  caseItem.logs.unshift({ title, detail, time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) });
+}
+
 function selectedCase() {
   return cases.find((caseItem) => caseItem.id === state.selectedCaseId) || cases[0];
+}
+
+function reviewQueueCases() {
+  return cases.filter((caseItem) => [
+    lifecycleStates.aiDone,
+    lifecycleStates.pendingReview,
+    lifecycleStates.reviewing,
+    lifecycleStates.pendingDoctor,
+    lifecycleStates.appealed,
+    lifecycleStates.pendingRecovery,
+    lifecycleStates.overdue,
+  ].includes(caseItem.status));
+}
+
+function selectedReviewCase() {
+  const queue = reviewQueueCases();
+  if (!queue.find((caseItem) => caseItem.id === state.selectedCaseId) && queue[0]) state.selectedCaseId = queue[0].id;
+  return cases.find((caseItem) => caseItem.id === state.selectedCaseId) || cases[0];
+}
+
+function doctorTaskCases() {
+  return cases.filter((caseItem) => [lifecycleStates.pendingDoctor, lifecycleStates.doctorFixing, lifecycleStates.appealed, lifecycleStates.overdue].includes(caseItem.status));
+}
+
+function selectedDoctorCase() {
+  const tasks = doctorTaskCases();
+  if (!tasks.find((caseItem) => caseItem.id === state.selectedDoctorCaseId) && tasks[0]) state.selectedDoctorCaseId = tasks[0].id;
+  return cases.find((caseItem) => caseItem.id === state.selectedDoctorCaseId) || tasks[0];
+}
+
+function recoveryCases() {
+  return cases.filter((caseItem) => [lifecycleStates.pendingRecovery, lifecycleStates.appealed, lifecycleStates.overdue].includes(caseItem.status));
 }
 
 function navigate(viewName) {
@@ -424,9 +545,10 @@ function navigate(viewName) {
   element(`#${viewName}View`).classList.add('is-visible');
   elements('.nav-item').forEach((button) => button.classList.toggle('is-active', button.dataset.view === viewName));
   element('#viewTitle').textContent = viewMeta[viewName];
-  if (viewName === 'detail') renderDetail();
+  if (viewName === 'review') renderReviewWorkbench();
+  if (viewName === 'doctor') renderDoctorWorkspace();
+  if (viewName === 'recovery') renderRecoveryWorkspace();
   if (viewName === 'report') renderReport();
-  if (viewName === 'rectify') renderRectify();
   if (viewName === 'rules') {
     renderRules();
     renderDashboard();
@@ -464,7 +586,7 @@ function renderOverview() {
           <td>${caseItem.completeness}</td>
           <td>${caseItem.severe}</td>
           <td>${caseItem.normal}</td>
-          <td><span class="status-pill ${caseItem.status === '已通过' ? 'calm' : 'warning'}">${caseItem.status}</span></td>
+          <td><span class="status-pill ${caseItem.status === lifecycleStates.passed ? 'calm' : 'warning'}">${caseItem.status}</span></td>
           <td><button class="text-button" data-case-detail="${caseItem.id}" type="button">查看详情</button></td>
         </tr>
       `).join('')}</tbody>
@@ -694,10 +816,126 @@ function initDetailResizers() {
   rightResizer.addEventListener('dblclick', resetLayout);
 }
 
+function renderReviewWorkbench() {
+  const queue = reviewQueueCases();
+  const caseItem = selectedReviewCase();
+  const reviewedCount = cases.filter((item) => item.status === lifecycleStates.passed).length;
+  element('#reviewWorkbench').innerHTML = `
+    <div class="review-workbench">
+      <aside class="surface review-queue-panel">
+        <div class="section-heading compact">
+          <div><p class="eyebrow">复核队列</p><h3 id="reviewTitle">批量复核</h3></div>
+          <span class="status-pill calm">${reviewedCount} / ${cases.length}</span>
+        </div>
+        <div class="queue-summary">
+          <button class="queue-filter is-active" type="button">高风险 ${cases.filter((item) => item.risk === '高').length}</button>
+          <button class="queue-filter" type="button">中风险 ${cases.filter((item) => item.risk === '中').length}</button>
+          <button class="queue-filter" type="button">低风险 ${cases.filter((item) => item.risk === '低').length}</button>
+        </div>
+        <button class="button button-secondary full-width" id="bulkPassLowRiskButton" type="button">低风险批量认可并通过</button>
+        <div class="review-queue-list">
+          ${queue.map((item) => `
+            <button class="review-queue-card ${item.id === caseItem.id ? 'is-active' : ''}" data-review-case="${item.id}" type="button">
+              <strong>${item.patient}</strong>
+              <span>${item.visitNo}｜${item.department}</span>
+              <small>${scoreLabel(item)}｜${item.risk}风险｜${item.defects.length}缺陷</small>
+              <em>${item.status}</em>
+            </button>
+          `).join('')}
+        </div>
+      </aside>
+      <section class="surface review-case-panel">
+        <div class="review-case-header">
+          <div><p class="eyebrow">当前病历</p><h3>${caseItem.patient}｜${caseItem.department}</h3><span>${caseItem.diagnosis}｜${caseItem.visitNo}</span></div>
+          <strong>${scoreLabel(caseItem)}</strong>
+        </div>
+        <div class="review-defect-list">
+          ${caseItem.defects.map((defect) => `
+            <article class="review-defect-card" data-defect-card="${defect.id}">
+              <div class="defect-card-topline"><strong>${defect.title}</strong><span class="status-pill warning">${defect.reviewStatus}</span></div>
+              <p>${defect.description}</p>
+              <dl class="defect-evidence-grid"><div><dt>规则依据</dt><dd>${defect.rule}</dd></div><div><dt>扣分</dt><dd>${defect.finalDeduction ?? defect.points} 分</dd></div><div><dt>来源</dt><dd>${defect.source || 'AI'}</dd></div></dl>
+              <div class="defect-actions">
+                <button class="tiny-button" data-review-action="accept" data-defect-id="${defect.id}" type="button">认可</button>
+                <button class="tiny-button" data-review-action="reject" data-defect-id="${defect.id}" type="button">驳回</button>
+                <button class="tiny-button" data-review-action="adjust" data-defect-id="${defect.id}" type="button">改判扣分</button>
+                <button class="tiny-button" data-review-action="return" data-defect-id="${defect.id}" type="button">退回临床</button>
+              </div>
+            </article>
+          `).join('')}
+        </div>
+        <div class="review-footer-actions">
+          <button class="button button-secondary" id="manualDefectButton" type="button">补录人工缺陷</button>
+          <button class="button button-primary" id="approveAndNextButton" type="button">确认并下一份 ⇥</button>
+        </div>
+      </section>
+      <aside class="surface evidence-panel">
+        <div class="section-heading compact"><div><p class="eyebrow">证据链</p><h3>原文与日志</h3></div></div>
+        <div class="evidence-box"><strong>原文高亮</strong><p>${caseItem.documents?.find((doc) => doc.status.includes('缺陷') || doc.status.includes('未提供'))?.meta || '当前病历暂无异常原文定位'}</p><mark>系统定位到与当前缺陷相关的原文段落。</mark></div>
+        <div class="evidence-box"><strong>规则依据</strong><p>${caseItem.defects[0]?.rule || '暂无规则'}</p></div>
+        <div class="evidence-box"><strong>操作日志</strong>${(caseItem.logs || [{ time: '10:32', title: 'AI 初判完成', detail: scoreLabel(caseItem) }]).map((log) => `<p>${log.time}｜${log.title}<br><small>${log.detail}</small></p>`).join('')}</div>
+      </aside>
+    </div>
+  `;
+}
+
+function renderDoctorWorkspace() {
+  const tasks = doctorTaskCases();
+  const caseItem = selectedDoctorCase();
+  element('#doctorWorkspace').innerHTML = `
+    <div class="doctor-workspace">
+      <aside class="surface doctor-task-list">
+        <div class="section-heading compact"><div><p class="eyebrow">临床医生</p><h3 id="doctorTitle">我的整改任务</h3></div></div>
+        <div class="doctor-task-stats"><span>待整改 ${tasks.filter((item) => item.status === lifecycleStates.pendingDoctor).length}</span><span>申诉中 ${tasks.filter((item) => item.status === lifecycleStates.appealed).length}</span><span>超时 ${tasks.filter((item) => item.status === lifecycleStates.overdue).length}</span></div>
+        ${tasks.length ? tasks.map((item) => `
+          <button class="doctor-task-card ${item.id === caseItem?.id ? 'is-active' : ''}" data-doctor-case="${item.id}" type="button">
+            <strong>${item.patient}</strong><span>${item.visitNo}｜${item.department}</span><small>${item.defects.filter((defect) => defect.reviewStatus === defectStatuses.returned).length || item.defects.length} 条问题｜${item.rectifyDue || '明日 18:00'}</small><em>${item.status}</em>
+          </button>
+        `).join('') : '<p class="empty-copy">暂无医生整改任务。</p>'}
+      </aside>
+      <section class="surface doctor-detail-panel">
+        ${caseItem ? `
+          <div class="section-heading"><div><p class="eyebrow">整改详情</p><h3>${caseItem.patient}｜${caseItem.diagnosis}</h3><span>退回人：质控科 张老师｜整改期限：${caseItem.rectifyDue || '明日 18:00'}</span></div></div>
+          <div class="doctor-defect-list">
+            ${caseItem.defects.filter((defect) => defect.reviewStatus === defectStatuses.returned || defect.reviewStatus === defectStatuses.accepted || defect.reviewStatus === defectStatuses.manual).map((defect) => `
+              <article class="doctor-defect-card"><strong>${defect.title}</strong><p>${defect.description}</p><dl><div><dt>规则依据</dt><dd>${defect.rule}</dd></div><div><dt>整改要求</dt><dd>请补充病历原文并提交质控科复核。</dd></div></dl><button class="tiny-button" type="button">查看原文</button></article>
+            `).join('')}
+          </div>
+          <label class="rectify-note"><span>整改说明</span><textarea id="doctorRectifyNote" rows="4" placeholder="填写已修改内容、补充位置或申诉理由"></textarea></label>
+          <div class="doctor-actions"><button class="button button-primary" id="submitRectifyButton" type="button">已整改，提交复核</button><button class="button button-secondary" id="submitAppealButton" type="button">我认为无问题，提交申诉</button></div>
+        ` : '<p class="empty-copy">质控科退回临床后，医生任务会显示在这里。</p>'}
+      </section>
+    </div>
+  `;
+}
+
+function renderRecoveryWorkspace() {
+  const items = recoveryCases();
+  element('#recoveryWorkspace').innerHTML = `
+    <section class="surface recovery-workspace">
+      <div class="section-heading"><div><p class="eyebrow">质控科</p><h3 id="recoveryTitle">回收复核</h3><span>医生整改提交和申诉裁决集中处理</span></div></div>
+      <div class="recovery-lanes">
+        ${[
+          { title: '已整改待复核', status: lifecycleStates.pendingRecovery },
+          { title: '申诉待裁决', status: lifecycleStates.appealed },
+          { title: '整改超时', status: lifecycleStates.overdue },
+        ].map((lane) => `
+          <section class="recovery-lane"><h4>${lane.title}</h4>
+            ${items.filter((item) => item.status === lane.status).map((item) => `
+              <article class="recovery-card"><strong>${item.patient}</strong><span>${item.visitNo}｜${item.department}</span><small>${scoreLabel(item)}</small><div><button class="tiny-button" data-recovery-action="pass" data-recovery-case="${item.id}" type="button">复核通过</button><button class="tiny-button" data-recovery-action="return-again" data-recovery-case="${item.id}" type="button">再次退回</button><button class="tiny-button" data-recovery-action="accept-appeal" data-recovery-case="${item.id}" type="button">接受申诉</button></div></article>
+            `).join('') || '<p class="empty-copy">暂无任务</p>'}
+          </section>
+        `).join('')}
+      </div>
+    </section>
+  `;
+}
+
 function renderReport() {
   const caseItem = selectedCase();
   const defects = caseItem.defects;
   const passText = isPassed(caseItem) ? '通过' : '未通过';
+  const activeTemplate = reportTemplates.find((template) => template.id === state.activeReportTemplate) || reportTemplates[0];
   const reportSections = [
     { id: 'report-overview', title: '基本信息', meta: `${caseItem.department}｜${caseItem.visitNo}` },
     { id: 'report-defects', title: '缺陷明细', meta: `${defects.length} 条问题` },
@@ -721,9 +959,19 @@ function renderReport() {
   `).join('');
 
   element('#reportPaper').innerHTML = `
+    <div class="report-template-grid">
+      ${reportTemplates.map((template) => `
+        <button class="report-template-card ${template.id === activeTemplate.id ? 'is-active' : ''}" data-report-template="${template.id}" type="button">
+          <strong>${template.name}</strong>
+          <span>${template.audience}</span>
+          <small>${template.focus}</small>
+        </button>
+      `).join('')}
+    </div>
     <article class="report-paper">
       <section class="report-section" id="report-overview">
         <h4>${caseItem.patient}</h4>
+        <p class="report-note">当前模板：${activeTemplate.name}。本报告面向 ${activeTemplate.audience}，重点呈现 ${activeTemplate.focus}。</p>
         <p class="report-patient-meta">${caseItem.department}｜${caseItem.visitNo}｜${caseItem.genderAge}｜主治：${caseItem.doctor}｜${caseItem.diagnosis}</p>
         <dl>
           <div><dt>病例总分</dt><dd>${caseItem.score} 分</dd></div>
@@ -808,10 +1056,10 @@ function syncReportSection(scrollTargetId) {
 
 function renderRectify() {
   const lanes = [
-    { title: '待人工复核', hint: 'AI 已完成', items: cases.filter((caseItem) => caseItem.status === '待人工复核') },
-    { title: '待整改', hint: '科室处理中', items: cases.filter((caseItem) => caseItem.status === '待整改') },
-    { title: '已整改待复核', hint: '医生已提交', items: cases.filter((caseItem) => caseItem.status === '已整改待复核') },
-    { title: '已通过', hint: '可归档', items: cases.filter((caseItem) => caseItem.status === '已通过') },
+    { title: '待人工复核', hint: 'AI已完成', items: cases.filter((caseItem) => caseItem.status === lifecycleStates.pendingReview) },
+    { title: '待临床整改', hint: '科室处理中', items: cases.filter((caseItem) => caseItem.status === lifecycleStates.pendingDoctor) },
+    { title: '已整改待复核', hint: '医生已提交', items: cases.filter((caseItem) => caseItem.status === lifecycleStates.pendingRecovery) },
+    { title: '复核通过', hint: '可归档', items: cases.filter((caseItem) => caseItem.status === lifecycleStates.passed) },
   ];
   element('#rectifyBoard').innerHTML = lanes.map((lane) => `
     <section class="rectify-lane">
@@ -1038,7 +1286,7 @@ function bindEvents() {
       state.selectedCaseId = caseDetailButton.dataset.caseDetail;
       state.selectedDocumentId = 'doc-discharge';
       state.selectedDefectId = selectedCase().defects[0]?.id || '';
-      navigate('detail');
+      navigate('review');
     }
 
     const caseReportButton = event.target.closest('[data-case-report]');
@@ -1048,12 +1296,162 @@ function bindEvents() {
       showToast(`${selectedCase().patient} 的质控报告已生成`);
     }
 
+    const reviewCaseButton = event.target.closest('[data-review-case]');
+    if (reviewCaseButton) {
+      state.selectedCaseId = reviewCaseButton.dataset.reviewCase;
+      const caseItem = selectedReviewCase();
+      caseItem.status = lifecycleStates.reviewing;
+      addCaseLog(caseItem, '进入人工复核', '质控员打开该病历进行缺陷裁决');
+      renderReviewWorkbench();
+    }
+
+    const reviewActionButton = event.target.closest('[data-review-action]');
+    if (reviewActionButton) {
+      const caseItem = selectedReviewCase();
+      const defect = caseItem.defects.find((item) => item.id === reviewActionButton.dataset.defectId);
+      const action = reviewActionButton.dataset.reviewAction;
+      if (defect && action === 'accept') {
+        defect.reviewStatus = defectStatuses.accepted;
+        addCaseLog(caseItem, '认可 AI 缺陷', `${defect.title} 保留扣分 ${defect.finalDeduction ?? defect.points} 分`);
+        showToast('已认可该 AI 缺陷，扣分保留');
+      }
+      if (defect && action === 'reject') {
+        defect.reviewStatus = defectStatuses.rejected;
+        defect.finalDeduction = 0;
+        defect.reviewReason = '质控员判定该 AI 缺陷不成立';
+        addCaseLog(caseItem, '驳回 AI 缺陷', `${defect.title} 扣分已回补，总分重算为 ${recalculatedScore(caseItem)} 分`);
+        showToast('已驳回该 AI 缺陷，分数已回补');
+      }
+      if (defect && action === 'adjust') {
+        const base = Number(defect.finalDeduction ?? defect.points) || 0;
+        defect.reviewStatus = defectStatuses.adjusted;
+        defect.finalDeduction = Math.max(1, base - 2);
+        defect.reviewReason = `质控员将扣分从 ${base} 分改判为 ${defect.finalDeduction} 分`;
+        addCaseLog(caseItem, '改判扣分', defect.reviewReason);
+        showToast('已改判扣分，分数实时重算');
+      }
+      if (defect && action === 'return') {
+        defect.reviewStatus = defectStatuses.returned;
+        caseItem.status = lifecycleStates.pendingDoctor;
+        caseItem.ownerDoctor = caseItem.ownerDoctor || '王医生';
+        caseItem.rectifyDue = '明日 18:00';
+        addCaseLog(caseItem, '退回临床整改', `${defect.title} 已退回 ${caseItem.ownerDoctor}，整改期限 ${caseItem.rectifyDue}`);
+        showToast('已退回临床医生整改');
+      }
+      renderReviewWorkbench();
+      renderDoctorWorkspace();
+      renderRecoveryWorkspace();
+    }
+
+    const manualDefectButton = event.target.closest('#manualDefectButton');
+    if (manualDefectButton) {
+      const caseItem = selectedReviewCase();
+      const newDefect = {
+        id: `manual-${Date.now()}`,
+        title: '人工补录：出院医嘱缺少复诊时间',
+        description: '质控员复核原文后补录 AI 未召回缺陷。',
+        rule: 'R-2026-061 出院医嘱完整性',
+        points: 3,
+        originalDeduction: 0,
+        finalDeduction: 3,
+        source: '人工补录',
+        reviewStatus: defectStatuses.manual,
+        reviewReason: '人工发现出院医嘱未明确复诊时间',
+      };
+      caseItem.defects.push(newDefect);
+      addCaseLog(caseItem, '补录人工缺陷', `${newDefect.title}，扣 ${newDefect.finalDeduction} 分`);
+      renderReviewWorkbench();
+      showToast('已补录人工缺陷并计入总分');
+    }
+
+    const approveAndNextButton = event.target.closest('#approveAndNextButton');
+    if (approveAndNextButton) {
+      const queue = reviewQueueCases();
+      const caseItem = selectedReviewCase();
+      caseItem.status = lifecycleStates.passed;
+      addCaseLog(caseItem, '复核通过', `最终分数 ${recalculatedScore(caseItem)} 分，进入报告候选`);
+      const currentIndex = queue.findIndex((item) => item.id === caseItem.id);
+      const nextCase = queue[currentIndex + 1] || reviewQueueCases()[0];
+      if (nextCase) state.selectedCaseId = nextCase.id;
+      renderReviewWorkbench();
+      renderOverview();
+      showToast('当前病历已复核通过，已切换到下一份');
+    }
+
+    const bulkPassLowRiskButton = event.target.closest('#bulkPassLowRiskButton');
+    if (bulkPassLowRiskButton) {
+      const lowRiskCases = cases.filter((caseItem) => caseItem.risk === '低' && [lifecycleStates.aiDone, lifecycleStates.pendingReview].includes(caseItem.status));
+      lowRiskCases.forEach((caseItem) => {
+        caseItem.status = lifecycleStates.passed;
+        addCaseLog(caseItem, '批量认可并通过', `质控员按低风险筛选批量放行，本批影响 ${lowRiskCases.length} 份病历`);
+      });
+      renderReviewWorkbench();
+      renderOverview();
+      showToast(`已批量认可并通过 ${lowRiskCases.length} 份低风险病历`);
+    }
+
+    const doctorCaseButton = event.target.closest('[data-doctor-case]');
+    if (doctorCaseButton) {
+      state.selectedDoctorCaseId = doctorCaseButton.dataset.doctorCase;
+      renderDoctorWorkspace();
+    }
+
+    const submitRectifyButton = event.target.closest('#submitRectifyButton');
+    if (submitRectifyButton) {
+      const caseItem = selectedDoctorCase();
+      caseItem.status = lifecycleStates.pendingRecovery;
+      addCaseLog(caseItem, '医生提交整改', '责任医生已提交整改说明，等待质控科回收复核');
+      renderDoctorWorkspace();
+      renderRecoveryWorkspace();
+      showToast('医生已提交整改，任务回到质控科待复核');
+    }
+
+    const submitAppealButton = event.target.closest('#submitAppealButton');
+    if (submitAppealButton) {
+      const caseItem = selectedDoctorCase();
+      caseItem.status = lifecycleStates.appealed;
+      addCaseLog(caseItem, '医生提交申诉', '责任医生认为病历无问题，等待质控科裁决');
+      renderDoctorWorkspace();
+      renderRecoveryWorkspace();
+      showToast('医生已提交申诉，等待质控科裁决');
+    }
+
+    const recoveryActionButton = event.target.closest('[data-recovery-action]');
+    if (recoveryActionButton) {
+      const caseItem = cases.find((item) => item.id === recoveryActionButton.dataset.recoveryCase);
+      const action = recoveryActionButton.dataset.recoveryAction;
+      if (caseItem && action === 'pass') {
+        caseItem.status = lifecycleStates.passed;
+        addCaseLog(caseItem, '回收复核通过', `最终分数 ${recalculatedScore(caseItem)} 分，可进入报告输出`);
+        showToast('回收复核通过');
+      }
+      if (caseItem && action === 'return-again') {
+        caseItem.status = lifecycleStates.pendingDoctor;
+        addCaseLog(caseItem, '再次退回临床', '质控科复核后仍不通过，已再次退回责任医生');
+        showToast('已再次退回临床整改');
+      }
+      if (caseItem && action === 'accept-appeal') {
+        caseItem.defects.forEach((defect) => {
+          if (defect.reviewStatus === defectStatuses.returned) {
+            defect.reviewStatus = defectStatuses.rejected;
+            defect.finalDeduction = 0;
+          }
+        });
+        caseItem.status = lifecycleStates.passed;
+        addCaseLog(caseItem, '接受医生申诉', `相关缺陷已驳回，最终分数 ${recalculatedScore(caseItem)} 分`);
+        showToast('已接受申诉并放行');
+      }
+      renderRecoveryWorkspace();
+      renderReviewWorkbench();
+      renderDoctorWorkspace();
+    }
+
     const defectFocusButton = event.target.closest('[data-defect-focus]');
     if (defectFocusButton) {
       state.selectedDefectId = defectFocusButton.dataset.defectFocus;
       const defect = selectedCase().defects.find((d) => d.id === state.selectedDefectId);
       if (defect) state.selectedDocumentId = defect.document === '病案首页' ? 'doc-homepage' : defect.document === '入院记录' ? 'doc-admission' : defect.document === '首次病程记录' ? 'doc-course' : defect.document === '日常病程记录' ? 'doc-daily' : defect.document === '术前讨论记录' ? 'doc-preop' : defect.document === '手术记录' ? 'doc-surgery' : defect.document === '麻醉记录' ? 'doc-anesthesia' : 'doc-discharge';
-      renderDetail();
+      renderReviewWorkbench();
     }
 
     const ruleButton = event.target.closest('[data-rule-id]');
@@ -1072,13 +1470,13 @@ function bindEvents() {
     const statusButton = event.target.closest('[data-status]');
     if (statusButton) {
       state.statusFilter = statusButton.dataset.status;
-      renderResults();
+      renderReviewWorkbench();
     }
 
     const documentButton = event.target.closest('[data-document-id]');
     if (documentButton) {
       state.selectedDocumentId = documentButton.dataset.documentId;
-      renderDetail();
+      renderReviewWorkbench();
     }
 
     const candidateCheckbox = event.target.closest('[data-candidate-id]');
@@ -1100,7 +1498,7 @@ function bindEvents() {
       } else {
         state.selectedResultIds = state.selectedResultIds.filter((id) => id !== caseId);
       }
-      renderResults();
+      renderReviewWorkbench();
     }
 
     const defectActionButton = event.target.closest('[data-defect-action]');
@@ -1122,10 +1520,10 @@ function bindEvents() {
       if (action === 'rectify') {
         if (defect) defect.reviewStatus = '待整改';
         caseItem.status = '待整改';
-        renderResults();
-        renderRectify();
+        renderReviewWorkbench();
+        renderRecoveryWorkspace();
       }
-      renderDetail();
+      renderReviewWorkbench();
 
       const actionText = {
         confirm: '已确认该缺陷，状态将进入报告候选',
@@ -1154,6 +1552,11 @@ function bindEvents() {
     if (reportSectionButton) {
       state.activeReportSection = reportSectionButton.dataset.reportSection;
       syncReportSection(state.activeReportSection);
+    }
+    const reportTemplateButton = event.target.closest('[data-report-template]');
+    if (reportTemplateButton) {
+      state.activeReportTemplate = reportTemplateButton.dataset.reportTemplate;
+      renderReport();
     }
     const reportPdf = event.target.closest('#reportPdfButton');
     if (reportPdf) showToast(`已生成 ${selectedCase().patient} 的 PDF 报告`);
@@ -1207,34 +1610,34 @@ function bindEvents() {
       state.selectedResultIds = allSelected
         ? state.selectedResultIds.filter((id) => !visibleIds.includes(id))
         : Array.from(new Set([...state.selectedResultIds, ...visibleIds]));
-      renderResults();
+      renderReviewWorkbench();
     }
 
     const bulkReviewButton = event.target.closest('#bulkReviewButton');
     if (bulkReviewButton) {
       cases.forEach((caseItem) => {
-        if (state.selectedResultIds.includes(caseItem.id) && caseItem.status === 'AI 已完成') caseItem.status = '待人工复核';
+        if (state.selectedResultIds.includes(caseItem.id) && caseItem.status === lifecycleStates.aiDone) caseItem.status = lifecycleStates.pendingReview;
       });
-      renderResults();
-      renderRectify();
+      renderReviewWorkbench();
+      renderRecoveryWorkspace();
       showToast(`已将 ${state.selectedResultIds.length} 份病例加入人工复核队列`);
     }
   });
 
   element('#globalSearch').addEventListener('input', (event) => {
     state.searchText = event.target.value.trim();
-    if (state.activeView !== 'results') navigate('results');
-    renderResults();
+    if (state.activeView !== 'review') navigate('review');
+    renderReviewWorkbench();
   });
 
-  element('#departmentFilter').addEventListener('change', (event) => {
+  element('#departmentFilter')?.addEventListener('change', (event) => {
     state.departmentFilter = event.target.value;
-    renderResults();
+    renderReviewWorkbench();
   });
 
-  element('#riskFilter').addEventListener('change', (event) => {
+  element('#riskFilter')?.addEventListener('change', (event) => {
     state.riskFilter = event.target.value;
-    renderResults();
+    renderReviewWorkbench();
   });
 
   element('#syncHisButton').addEventListener('click', () => showToast('已模拟同步 HIS/EMR：新增 12 份出院病例'));
@@ -1247,23 +1650,23 @@ function bindEvents() {
       name: '新建终末质控任务',
       scope: `${state.importMode}｜${targetIds.length} 份病例｜${formatDateRange(state.batchFilters.dischargeStartDate, state.batchFilters.dischargeEndDate)}｜${rules.find((rule) => rule.id === state.selectedRuleId)?.name || '基础规则'}`,
       progress: 8,
-      status: '质检中',
+      status: 'AI质检中',
     });
     cases.forEach((caseItem) => {
-      if (targetIds.includes(caseItem.id) && ['待质检', 'AI 已完成', '待人工复核'].includes(caseItem.status)) {
-        caseItem.status = '质检中';
+      if (targetIds.includes(caseItem.id) && [lifecycleStates.pendingAi, lifecycleStates.aiDone, lifecycleStates.pendingReview].includes(caseItem.status)) {
+        caseItem.status = lifecycleStates.aiRunning;
       }
     });
     renderOverview();
-    renderResults();
-    showToast(`AI 批量质检任务已创建，${targetIds.length} 份病例进入"质检中"`);
+    renderReviewWorkbench();
+    showToast(`AI 批量质检任务已创建，${targetIds.length} 份病例进入"AI质检中"`);
     navigate('overview');
   });
   element('#selectRiskOnlyButton').addEventListener('click', () => {
     state.riskOnlyCandidates = !state.riskOnlyCandidates;
     renderCandidates();
   });
-  element('#exportSelectedButton').addEventListener('click', () => showToast('已生成当前筛选结果的报告导出任务：PDF + Excel + 复核意见'));
+  element('#exportSelectedButton')?.addEventListener('click', () => showToast('已生成当前筛选结果的报告导出任务：PDF + Excel + 复核意见'));
 
   const batchDateInputs = {
     batchDischargeStart: 'dischargeStartDate',
@@ -1284,7 +1687,7 @@ function bindEvents() {
     });
   });
 
-  element('#reportPaper').addEventListener('scroll', () => {
+  element('#reportPaper')?.addEventListener('scroll', () => {
     if (state.activeView === 'report') syncReportSection();
   });
 
@@ -1293,9 +1696,9 @@ function bindEvents() {
 function init() {
   renderOverview();
   renderBatch();
-  renderResults();
-  renderDetail();
-  renderRectify();
+  renderReviewWorkbench();
+  renderDoctorWorkspace();
+  renderRecoveryWorkspace();
   renderRules();
   renderDashboard();
   bindEvents();

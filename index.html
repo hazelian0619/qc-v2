@@ -17,34 +17,21 @@
     <div class="app-shell">
       <aside class="sidebar" aria-label="主导航">
         <div class="brand-block">
-          <div class="brand-mark" aria-hidden="true">质</div>
-          <div>
-            <h1>质控操作系统</h1>
+          <img class="brand-logo" src="./assets/qianshu-wenyi-logo.jpg" alt="千枢问医" />
+          <div class="brand-copy">
+            <h1>千枢问医</h1>
+            <p>AI 终末病历质控系统</p>
           </div>
         </div>
 
         <nav class="nav-list" id="mainNav">
-          <button class="nav-item is-active" data-view="overview" type="button">
-            <span>质控工作台</span>
-          </button>
-          <button class="nav-item" data-view="batch" type="button">
-            <span>质检任务</span>
-          </button>
-          <button class="nav-item" data-view="results" type="button">
-            <span>质检结果</span>
-          </button>
-         <button class="nav-item" data-view="detail" type="button">
-           <span>单病例质控</span>
-         </button>
-          <button class="nav-item" data-view="report" type="button">
-            <span>质控报告</span>
-          </button>
-         <button class="nav-item" data-view="rectify" type="button">
-           <span>整改复核</span>
-         </button>
-          <button class="nav-item" data-view="rules" type="button">
-            <span>规则与看板</span>
-          </button>
+          <button class="nav-item is-active" data-view="overview" type="button"><span>总览驾驶舱</span></button>
+          <button class="nav-item" data-view="batch" type="button"><span>导入质检</span></button>
+          <button class="nav-item" data-view="review" type="button"><span>批量复核</span></button>
+          <button class="nav-item" data-view="doctor" type="button"><span>临床整改</span></button>
+          <button class="nav-item" data-view="recovery" type="button"><span>回收复核</span></button>
+          <button class="nav-item" data-view="report" type="button"><span>报告中心</span></button>
+          <button class="nav-item" data-view="rules" type="button"><span>规则看板</span></button>
         </nav>
 
         <section class="sidebar-panel compact-status" aria-label="今日任务状态">
@@ -77,8 +64,8 @@
               <span>HIS 同步：10:32</span>
             </div>
             <div class="control-actions">
-              <button class="button button-secondary" data-view-link="results" type="button">查看质控列表</button>
-              <button class="button button-primary" data-view-link="batch" type="button">重新发起质控</button>
+              <button class="button button-secondary" data-view-link="review" type="button">进入批量复核</button>
+              <button class="button button-primary" data-view-link="batch" type="button">发起导入质检</button>
             </div>
           </div>
           <div class="metric-grid" id="metricGrid"></div>
@@ -90,7 +77,7 @@
                   <p class="eyebrow">今日队列</p>
                   <h3>优先处理</h3>
                 </div>
-                <button class="text-button" data-view-link="results" type="button">进入质控列表</button>
+                <button class="text-button" data-view-link="review" type="button">进入批量复核</button>
               </div>
               <div class="case-queue" id="priorityQueue"></div>
             </section>
@@ -257,99 +244,16 @@
           </div>
         </section>
 
-        <section class="view" id="resultsView" aria-labelledby="resultsTitle">
-          <section class="surface">
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow">结果列表</p>
-                <h3 id="resultsTitle">质检结果</h3>
-              </div>
-              <div class="segmented" id="statusTabs" role="tablist" aria-label="质控状态筛选"></div>
-            </div>
-            <div class="table-toolbar">
-              <label>科室
-                <select id="departmentFilter">
-                  <option value="全部">全部</option>
-                  <option value="普外科">普外科</option>
-                  <option value="心内科">心内科</option>
-                  <option value="骨科">骨科</option>
-                  <option value="神经内科">神经内科</option>
-                </select>
-              </label>
-              <label>风险
-                <select id="riskFilter">
-                  <option value="全部">全部</option>
-                  <option value="高">高风险</option>
-                  <option value="中">中风险</option>
-                  <option value="低">低风险</option>
-                </select>
-              </label>
-              <div class="bulk-toolbar" id="resultsBulkToolbar">
-                <span class="bulk-count" id="selectedResultCount">已选 0 份病例</span>
-                <button class="button button-secondary" id="selectVisibleResultsButton" type="button">全选当前列表</button>
-                <button class="button button-secondary" id="bulkReviewButton" type="button">批量加入复核</button>
-                <button class="button button-secondary" id="exportSelectedButton" type="button">批量导出报告</button>
-              </div>
-            </div>
-            <div class="quality-table" id="qualityTable"></div>
-          </section>
+        <section class="view" id="reviewView" aria-labelledby="reviewTitle">
+          <div id="reviewWorkbench"></div>
         </section>
 
-        <section class="view" id="detailView" aria-labelledby="detailTitle">
-          <div class="case-detail-layout">
-            <section class="surface case-summary">
-              <div class="section-heading">
-                <div>
-                  <p class="eyebrow" id="detailCaseMeta">住院号 ZY2026061807</p>
-                  <h3 id="detailTitle">林敏｜普外科｜胆囊结石伴胆囊炎</h3>
-                </div>
-                <span class="score-badge" id="detailScore">82 分</span>
-              </div>
-              <div class="summary-grid" id="caseSummaryGrid"></div>
-            </section>
-
-            <aside class="surface document-nav">
-              <p class="eyebrow">文书目录</p>
-              <div id="documentList"></div>
-            </aside>
-
-            <div class="detail-resizer detail-resizer-left" id="detailResizerLeft" aria-hidden="true"></div>
-
-            <section class="surface record-panel">
-              <div class="section-heading compact">
-                <div>
-                  <p class="eyebrow" id="recordMeta">出院记录｜2026-06-18 09:42｜王医生签名</p>
-                  <h3 id="recordTitle">原文定位</h3>
-                </div>
-              </div>
-              <article class="medical-record" id="medicalRecord"></article>
-            </section>
-
-            <div class="detail-resizer detail-resizer-right" id="detailResizerRight" aria-hidden="true"></div>
-
-            <aside class="surface defect-panel">
-              <div class="section-heading compact">
-                <div>
-                  <p class="eyebrow">缺陷处理</p>
-                  <h3>证据与操作</h3>
-                </div>
-              </div>
-              <div id="defectCards"></div>
-            </aside>
-          </div>
+        <section class="view" id="doctorView" aria-labelledby="doctorTitle">
+          <div id="doctorWorkspace"></div>
         </section>
 
-        <section class="view" id="rectifyView" aria-labelledby="rectifyTitle">
-          <section class="surface">
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow">闭环留痕</p>
-                <h3 id="rectifyTitle">整改复核</h3>
-              </div>
-              <button class="button button-secondary" type="button">导出整改清单</button>
-            </div>
-            <div class="rectify-board" id="rectifyBoard"></div>
-          </section>
+        <section class="view" id="recoveryView" aria-labelledby="recoveryTitle">
+          <div id="recoveryWorkspace"></div>
         </section>
 
       <section class="view" id="reportView" aria-labelledby="reportTitle">

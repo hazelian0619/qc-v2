@@ -12,6 +12,7 @@
   --text: #142333;
   --text-soft: #3f5366;
   --muted: #78899a;
+  --muted-text: var(--muted);
   --muted-2: #a7b4bf;
   --primary: #2474a9;
   --primary-2: #17577f;
@@ -63,21 +64,32 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   backdrop-filter: blur(20px);
   overflow-y: auto;
 }
-.brand-block { display: flex; align-items: center; gap: 10px; padding: 6px 10px 22px; }
-.brand-mark {
+.brand-block {
   display: grid;
-  place-items: center;
-  width: 31px;
-  height: 31px;
-  color: white;
-  background: #17669b;
-  border-radius: 9px;
-  font-size: 14px;
-  font-weight: 620;
-  box-shadow: 0 8px 18px rgba(23,102,155,.12);
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 6px 10px 22px;
+}
+.brand-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #ffffff;
 }
 .eyebrow { margin: 0 0 4px; color: var(--muted); font-size: 11px; font-weight: 520; letter-spacing: .04em; }
-.brand-block h1 { margin: 0; font-size: 15px; font-weight: 580; letter-spacing: -.018em; line-height: 1.15; }
+.brand-copy h1 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+}
+.brand-copy p {
+  margin: 3px 0 0;
+  color: var(--muted-text);
+  font-size: 12px;
+  line-height: 1.35;
+}
 .nav-list { display: grid; gap: 3px; }
 .nav-item {
   position: relative;
@@ -1201,33 +1213,18 @@ select:focus-visible {
   backdrop-filter: blur(24px);
 }
 
-.brand-mark {
-  color: #57779d;
-  background: rgba(236, 243, 251, .9);
-  border: 1px solid rgba(87, 119, 157, .14);
-  border-radius: 9px;
-  font-weight: 500;
-  box-shadow: none;
-}
-
 .eyebrow {
   color: var(--muted);
   font-weight: 500;
   letter-spacing: .04em;
 }
 
-.brand-block h1,
+.brand-copy h1,
 .topbar h2,
 .section-heading h3,
 .report-paper h4,
 .trend-panel h4 {
   font-family: var(--font-display);
-}
-
-.brand-block h1 {
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: -.008em;
 }
 
 .topbar h2 {
@@ -1579,4 +1576,190 @@ select:focus-visible {
 .toast {
   background: rgba(28, 43, 67, .88);
   backdrop-filter: blur(18px);
+}
+
+.review-workbench {
+  display: grid;
+  grid-template-columns: 280px minmax(460px, 1fr) 340px;
+  gap: 16px;
+  min-height: calc(100vh - 132px);
+}
+
+.review-queue-panel,
+.review-case-panel,
+.evidence-panel {
+  min-width: 0;
+}
+
+.queue-summary,
+.defect-actions,
+.review-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.queue-filter,
+.review-queue-card {
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  border-radius: 14px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.review-queue-card {
+  display: grid;
+  width: 100%;
+  gap: 4px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.review-queue-card.is-active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.full-width {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.review-case-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.review-defect-list {
+  display: grid;
+  gap: 12px;
+}
+
+.review-defect-card,
+.evidence-box {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-muted);
+  padding: 14px;
+}
+
+.defect-card-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.defect-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.evidence-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.doctor-workspace {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.doctor-task-stats,
+.doctor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.doctor-task-card,
+.doctor-defect-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-muted);
+  padding: 14px;
+}
+
+.doctor-task-card {
+  display: grid;
+  width: 100%;
+  gap: 4px;
+  margin-top: 10px;
+  text-align: left;
+}
+
+.doctor-task-card.is-active {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.doctor-defect-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rectify-note {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.rectify-note textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.recovery-lanes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.recovery-lane {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-muted);
+  padding: 14px;
+}
+
+.recovery-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  margin-top: 10px;
+}
+
+.report-template-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.report-template-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-muted);
+  padding: 14px;
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+
+.report-template-card.is-active {
+  border-color: #2563eb;
+  background: #eff6ff;
 }
